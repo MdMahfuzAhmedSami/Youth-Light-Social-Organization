@@ -1,0 +1,1050 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>তারুণের আলো - সামাজিক সংগঠন</title>
+<link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@300;400;500;600;700&family=Noto+Serif+Bengali:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --green: #1B6B3A;
+    --green-dark: #134d2b;
+    --green-light: #e8f5ee;
+    --gold: #D4A017;
+    --gold-light: #fff8e1;
+    --text: #1a1a1a;
+    --text-muted: #555;
+    --bg: #fff;
+    --section-bg: #f8fdf9;
+    --border: #ddeee5;
+    --radius: 12px;
+  }
+
+  body {
+    font-family: 'Hind Siliguri', sans-serif;
+    color: var(--text);
+    background: var(--bg);
+    line-height: 1.7;
+  }
+
+  /* NAV */
+  nav {
+    background: var(--green);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+  }
+  .nav-inner {
+    max-width: 1100px;
+    margin: auto;
+    padding: 0 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 64px;
+  }
+  .nav-logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    text-decoration: none;
+  }
+  .nav-logo-icon {
+    width: 38px;
+    height: 38px;
+    background: var(--gold);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+  }
+  .nav-logo-text {
+    font-family: 'Noto Serif Bengali', serif;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #fff;
+    line-height: 1.2;
+  }
+  .nav-logo-sub {
+    font-size: 0.7rem;
+    color: rgba(255,255,255,0.75);
+    font-family: 'Hind Siliguri', sans-serif;
+    font-weight: 400;
+  }
+  .nav-links {
+    display: flex;
+    gap: 0.25rem;
+    list-style: none;
+  }
+  .nav-links a {
+    color: rgba(255,255,255,0.85);
+    text-decoration: none;
+    padding: 0.4rem 0.85rem;
+    border-radius: 6px;
+    font-size: 0.92rem;
+    transition: all 0.2s;
+  }
+  .nav-links a:hover {
+    background: rgba(255,255,255,0.15);
+    color: #fff;
+  }
+
+  /* HERO */
+  .hero {
+    background: linear-gradient(135deg, var(--green-dark) 0%, var(--green) 60%, #2e8b57 100%);
+    color: #fff;
+    padding: 6rem 1.5rem 5rem;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='30' cy='30' r='1.5' fill='rgba(255,255,255,0.06)'/%3E%3C/svg%3E") repeat;
+  }
+  .hero-content { position: relative; max-width: 700px; margin: auto; }
+  .hero-badge {
+    display: inline-block;
+    background: rgba(212,160,23,0.2);
+    border: 1px solid rgba(212,160,23,0.5);
+    color: var(--gold);
+    font-size: 0.82rem;
+    padding: 0.3rem 1rem;
+    border-radius: 50px;
+    margin-bottom: 1.5rem;
+    letter-spacing: 0.05em;
+  }
+  .hero h1 {
+    font-family: 'Noto Serif Bengali', serif;
+    font-size: 3.2rem;
+    font-weight: 700;
+    line-height: 1.2;
+    margin-bottom: 0.5rem;
+  }
+  .hero-sub {
+    font-size: 1.1rem;
+    opacity: 0.85;
+    margin-bottom: 1rem;
+  }
+  .hero-tagline {
+    font-family: 'Noto Serif Bengali', serif;
+    font-size: 1.25rem;
+    color: var(--gold);
+    margin-bottom: 2.5rem;
+    font-style: italic;
+  }
+  .hero-btns {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  .btn-primary {
+    background: var(--gold);
+    color: #1a1a1a;
+    border: none;
+    padding: 0.75rem 2rem;
+    border-radius: 50px;
+    font-size: 1rem;
+    font-family: 'Hind Siliguri', sans-serif;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.2s;
+    display: inline-block;
+  }
+  .btn-primary:hover { background: #c8960f; transform: translateY(-1px); }
+  .btn-outline {
+    background: transparent;
+    color: #fff;
+    border: 2px solid rgba(255,255,255,0.6);
+    padding: 0.75rem 2rem;
+    border-radius: 50px;
+    font-size: 1rem;
+    font-family: 'Hind Siliguri', sans-serif;
+    font-weight: 500;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.2s;
+    display: inline-block;
+  }
+  .btn-outline:hover { border-color: #fff; background: rgba(255,255,255,0.1); }
+
+  /* STATS */
+  .stats-bar {
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+    padding: 2rem 1.5rem;
+  }
+  .stats-grid {
+    max-width: 900px;
+    margin: auto;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+    text-align: center;
+  }
+  .stat-item { padding: 0.75rem; }
+  .stat-num {
+    font-size: 2.2rem;
+    font-weight: 700;
+    color: var(--green);
+    font-family: 'Noto Serif Bengali', serif;
+    line-height: 1;
+  }
+  .stat-label {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    margin-top: 0.3rem;
+  }
+
+  /* SECTION */
+  section { padding: 4.5rem 1.5rem; }
+  .section-alt { background: var(--section-bg); }
+  .container { max-width: 1100px; margin: auto; }
+  .section-header { text-align: center; margin-bottom: 3rem; }
+  .section-tag {
+    display: inline-block;
+    background: var(--green-light);
+    color: var(--green);
+    font-size: 0.8rem;
+    padding: 0.3rem 1rem;
+    border-radius: 50px;
+    margin-bottom: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+  }
+  .section-title {
+    font-family: 'Noto Serif Bengali', serif;
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 0.75rem;
+  }
+  .section-desc { color: var(--text-muted); font-size: 1rem; max-width: 560px; margin: auto; }
+
+  /* ABOUT */
+  .about-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 3rem;
+    align-items: center;
+  }
+  .about-img {
+    background: var(--green);
+    border-radius: var(--radius);
+    height: 340px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 6rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .about-img::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 50%;
+    background: linear-gradient(to top, rgba(19,77,43,0.7), transparent);
+  }
+  .about-text h2 {
+    font-family: 'Noto Serif Bengali', serif;
+    font-size: 1.75rem;
+    color: var(--green-dark);
+    margin-bottom: 1rem;
+  }
+  .about-text p { color: var(--text-muted); margin-bottom: 1rem; }
+  .about-features { list-style: none; margin-top: 1.5rem; }
+  .about-features li {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+    font-size: 0.95rem;
+  }
+  .feature-icon {
+    width: 28px;
+    height: 28px;
+    background: var(--green-light);
+    color: var(--green);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85rem;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  /* ACTIVITIES */
+  .activities-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+  }
+  .activity-card {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.75rem;
+    transition: all 0.25s;
+  }
+  .activity-card:hover {
+    border-color: var(--green);
+    box-shadow: 0 4px 20px rgba(27,107,58,0.1);
+    transform: translateY(-3px);
+  }
+  .activity-icon {
+    width: 52px;
+    height: 52px;
+    background: var(--green-light);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    margin-bottom: 1.25rem;
+  }
+  .activity-card h3 {
+    font-family: 'Noto Serif Bengali', serif;
+    font-size: 1.1rem;
+    color: var(--green-dark);
+    margin-bottom: 0.5rem;
+  }
+  .activity-card p { color: var(--text-muted); font-size: 0.9rem; }
+
+  /* EVENTS */
+  .events-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+  }
+  .event-card {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    display: flex;
+    transition: box-shadow 0.2s;
+  }
+  .event-card:hover { box-shadow: 0 4px 20px rgba(27,107,58,0.1); }
+  .event-date {
+    background: var(--green);
+    color: #fff;
+    width: 72px;
+    min-width: 72px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem 0.5rem;
+    text-align: center;
+  }
+  .event-day { font-size: 1.8rem; font-weight: 700; line-height: 1; }
+  .event-month { font-size: 0.72rem; margin-top: 0.2rem; opacity: 0.85; }
+  .event-info { padding: 1.25rem; }
+  .event-tag {
+    display: inline-block;
+    background: var(--gold-light);
+    color: #8a6500;
+    font-size: 0.72rem;
+    padding: 0.2rem 0.6rem;
+    border-radius: 4px;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+  }
+  .event-info h3 { font-size: 1rem; color: var(--text); margin-bottom: 0.25rem; }
+  .event-info p { font-size: 0.85rem; color: var(--text-muted); }
+
+  /* GALLERY */
+  .gallery-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+  }
+  .gallery-item {
+    aspect-ratio: 4/3;
+    border-radius: var(--radius);
+    overflow: hidden;
+    position: relative;
+    cursor: pointer;
+  }
+  .gallery-item-bg {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.5rem;
+    transition: transform 0.3s;
+  }
+  .gallery-item:hover .gallery-item-bg { transform: scale(1.05); }
+  .gallery-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(19,77,43,0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 0.85rem;
+    font-weight: 500;
+    opacity: 0;
+    transition: opacity 0.25s;
+  }
+  .gallery-item:hover .gallery-overlay { opacity: 1; }
+
+  /* COMMITTEE */
+  .committee-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1.5rem;
+  }
+  .member-card {
+    text-align: center;
+    padding: 1.5rem 1rem;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    transition: all 0.25s;
+  }
+  .member-card:hover {
+    border-color: var(--green);
+    box-shadow: 0 4px 16px rgba(27,107,58,0.1);
+  }
+  .member-avatar {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    background: var(--green);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.6rem;
+    margin: 0 auto 1rem;
+    border: 3px solid var(--green-light);
+  }
+  .member-name {
+    font-weight: 600;
+    font-size: 0.95rem;
+    color: var(--text);
+    margin-bottom: 0.25rem;
+  }
+  .member-role {
+    font-size: 0.8rem;
+    color: var(--green);
+    background: var(--green-light);
+    padding: 0.2rem 0.6rem;
+    border-radius: 4px;
+    display: inline-block;
+  }
+
+  /* MEMBERSHIP */
+  .membership-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 2rem;
+    align-items: start;
+  }
+  .form-card {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 2rem;
+  }
+  .form-card h3 {
+    font-family: 'Noto Serif Bengali', serif;
+    font-size: 1.3rem;
+    color: var(--green-dark);
+    margin-bottom: 1.5rem;
+  }
+  .form-group { margin-bottom: 1.25rem; }
+  .form-group label {
+    display: block;
+    font-size: 0.88rem;
+    color: var(--text-muted);
+    margin-bottom: 0.4rem;
+    font-weight: 500;
+  }
+  .form-group input,
+  .form-group select,
+  .form-group textarea {
+    width: 100%;
+    padding: 0.65rem 1rem;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-family: 'Hind Siliguri', sans-serif;
+    font-size: 0.95rem;
+    color: var(--text);
+    background: var(--section-bg);
+    transition: border-color 0.2s;
+    outline: none;
+  }
+  .form-group input:focus,
+  .form-group select:focus,
+  .form-group textarea:focus {
+    border-color: var(--green);
+    background: #fff;
+  }
+  .form-group textarea { height: 90px; resize: vertical; }
+  .btn-submit {
+    width: 100%;
+    background: var(--green);
+    color: #fff;
+    border: none;
+    padding: 0.85rem;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-family: 'Hind Siliguri', sans-serif;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .btn-submit:hover { background: var(--green-dark); }
+  .join-benefits h3 {
+    font-family: 'Noto Serif Bengali', serif;
+    font-size: 1.3rem;
+    color: var(--green-dark);
+    margin-bottom: 1.5rem;
+  }
+  .benefit-item {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1.25rem;
+    align-items: flex-start;
+  }
+  .benefit-icon {
+    width: 40px;
+    height: 40px;
+    background: var(--green-light);
+    color: var(--green);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    flex-shrink: 0;
+  }
+  .benefit-text h4 { font-size: 0.95rem; color: var(--text); margin-bottom: 0.2rem; }
+  .benefit-text p { font-size: 0.85rem; color: var(--text-muted); }
+
+  /* CONTACT */
+  .contact-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 3rem;
+    align-items: start;
+  }
+  .contact-info h2 {
+    font-family: 'Noto Serif Bengali', serif;
+    font-size: 1.6rem;
+    color: var(--green-dark);
+    margin-bottom: 1rem;
+  }
+  .contact-info p { color: var(--text-muted); margin-bottom: 2rem; }
+  .contact-item {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1.25rem;
+    align-items: flex-start;
+  }
+  .contact-icon {
+    width: 44px;
+    height: 44px;
+    background: var(--green-light);
+    color: var(--green);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    flex-shrink: 0;
+  }
+  .contact-detail strong { display: block; font-size: 0.88rem; color: var(--text-muted); font-weight: 400; }
+  .contact-detail span { font-size: 0.95rem; color: var(--text); font-weight: 500; }
+  .social-links { display: flex; gap: 0.75rem; margin-top: 2rem; }
+  .social-btn {
+    width: 44px;
+    height: 44px;
+    background: var(--green-light);
+    color: var(--green);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    font-size: 1.1rem;
+    transition: all 0.2s;
+  }
+  .social-btn:hover { background: var(--green); color: #fff; border-color: var(--green); }
+
+  /* DONATION */
+  .donation-box {
+    background: var(--green);
+    color: #fff;
+    border-radius: var(--radius);
+    padding: 2.5rem;
+    text-align: center;
+  }
+  .donation-box h3 {
+    font-family: 'Noto Serif Bengali', serif;
+    font-size: 1.4rem;
+    margin-bottom: 0.75rem;
+  }
+  .donation-box p { opacity: 0.85; margin-bottom: 1.75rem; font-size: 0.95rem; }
+  .payment-methods {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+  }
+  .pay-method {
+    background: rgba(255,255,255,0.15);
+    border: 1px solid rgba(255,255,255,0.3);
+    color: #fff;
+    padding: 0.6rem 1.2rem;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .pay-method:hover { background: rgba(255,255,255,0.25); }
+
+  /* FOOTER */
+  footer {
+    background: var(--green-dark);
+    color: rgba(255,255,255,0.8);
+    padding: 3rem 1.5rem 1.5rem;
+  }
+  .footer-grid {
+    max-width: 1100px;
+    margin: auto;
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 1fr;
+    gap: 2.5rem;
+    padding-bottom: 2rem;
+    border-bottom: 1px solid rgba(255,255,255,0.12);
+    margin-bottom: 1.5rem;
+  }
+  .footer-brand p { font-size: 0.88rem; margin-top: 0.75rem; opacity: 0.75; line-height: 1.7; }
+  .footer-col h4 { color: #fff; font-size: 0.92rem; margin-bottom: 1rem; font-weight: 600; }
+  .footer-col ul { list-style: none; }
+  .footer-col li { margin-bottom: 0.5rem; }
+  .footer-col a { color: rgba(255,255,255,0.65); text-decoration: none; font-size: 0.88rem; transition: color 0.2s; }
+  .footer-col a:hover { color: var(--gold); }
+  .footer-bottom {
+    max-width: 1100px;
+    margin: auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.8rem;
+    opacity: 0.6;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  /* SCROLL REVEAL */
+  .reveal { opacity: 0; transform: translateY(24px); transition: all 0.55s ease; }
+  .reveal.visible { opacity: 1; transform: none; }
+
+  @media (max-width: 768px) {
+    .nav-links { display: none; }
+    .hero h1 { font-size: 2.2rem; }
+    .stats-grid { grid-template-columns: repeat(2, 1fr); }
+    .about-grid, .membership-grid, .contact-grid { grid-template-columns: 1fr; }
+    .activities-grid { grid-template-columns: 1fr; }
+    .events-grid { grid-template-columns: 1fr; }
+    .gallery-grid { grid-template-columns: repeat(2, 1fr); }
+    .committee-grid { grid-template-columns: repeat(2, 1fr); }
+    .footer-grid { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-inner">
+    <a class="nav-logo" href="#">
+      <div class="nav-logo-icon">🌟</div>
+      <div>
+        <div class="nav-logo-text">তারুণের আলো</div>
+        <div class="nav-logo-sub">সামাজিক সংগঠন</div>
+      </div>
+    </a>
+    <ul class="nav-links">
+      <li><a href="#about">আমাদের সম্পর্কে</a></li>
+      <li><a href="#activities">কার্যক্রম</a></li>
+      <li><a href="#events">ইভেন্ট</a></li>
+      <li><a href="#gallery">গ্যালারি</a></li>
+      <li><a href="#committee">কমিটি</a></li>
+      <li><a href="#join">যোগ দিন</a></li>
+      <li><a href="#contact">যোগাযোগ</a></li>
+    </ul>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-content">
+    <div class="hero-badge">✨ সমাজ গড়ার প্রত্যয়</div>
+    <h1>তারুণের আলো</h1>
+    <p class="hero-sub">সামাজিক সংগঠন — বাংলাদেশ</p>
+    <p class="hero-tagline">"আলো ছড়াই, জীবন বদলাই"</p>
+    <div class="hero-btns">
+      <a href="#join" class="btn-primary">সদস্য হোন</a>
+      <a href="#about" class="btn-outline">আরও জানুন</a>
+    </div>
+  </div>
+</section>
+
+<!-- STATS -->
+<div class="stats-bar">
+  <div class="stats-grid">
+    <div class="stat-item">
+      <div class="stat-num">৫০০+</div>
+      <div class="stat-label">সক্রিয় সদস্য</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num">২০০+</div>
+      <div class="stat-label">প্রকল্প সম্পন্ন</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num">১০,০০০+</div>
+      <div class="stat-label">উপকৃত মানুষ</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num">৫+</div>
+      <div class="stat-label">বছরের অভিজ্ঞতা</div>
+    </div>
+  </div>
+</div>
+
+<!-- ABOUT -->
+<section id="about">
+  <div class="container">
+    <div class="about-grid reveal">
+      <div class="about-img">🌱</div>
+      <div class="about-text">
+        <div class="section-tag">আমাদের সম্পর্কে</div>
+        <h2>তরুণ প্রজন্মের আলোকবর্তিকা</h2>
+        <p>তারুণের আলো একটি অরাজনৈতিক সামাজিক সংগঠন যা দেশের তরুণ সমাজের মধ্যে সচেতনতা, শিক্ষা এবং সামাজিক উন্নয়নের লক্ষ্যে কাজ করে যাচ্ছে।</p>
+        <p>আমাদের লক্ষ্য হলো সমাজের সুবিধাবঞ্চিত মানুষদের পাশে দাঁড়ানো এবং একটি আলোকিত বাংলাদেশ গড়ে তোলা।</p>
+        <ul class="about-features">
+          <li><div class="feature-icon">✅</div> শিক্ষা ও দক্ষতা উন্নয়নে প্রতিশ্রুতিবদ্ধ</li>
+          <li><div class="feature-icon">✅</div> দরিদ্র ও সুবিধাবঞ্চিতদের সহায়তা</li>
+          <li><div class="feature-icon">✅</div> পরিবেশ সংরক্ষণে সক্রিয় ভূমিকা</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ACTIVITIES -->
+<section id="activities" class="section-alt">
+  <div class="container">
+    <div class="section-header reveal">
+      <div class="section-tag">কার্যক্রম</div>
+      <h2 class="section-title">আমাদের মূল কার্যক্রম</h2>
+      <p class="section-desc">সমাজের প্রতিটি স্তরে আমরা কাজ করি মানুষের জীবনমান উন্নয়নে</p>
+    </div>
+    <div class="activities-grid">
+      <div class="activity-card reveal">
+        <div class="activity-icon">📚</div>
+        <h3>শিক্ষা সহায়তা</h3>
+        <p>মেধাবী গরিব ছাত্রছাত্রীদের বৃত্তি, বই বিতরণ এবং শিক্ষা উপকরণ প্রদান।</p>
+      </div>
+      <div class="activity-card reveal">
+        <div class="activity-icon">🏥</div>
+        <h3>স্বাস্থ্যসেবা</h3>
+        <p>বিনামূল্যে স্বাস্থ্য শিবির, রক্তদান কর্মসূচি এবং স্বাস্থ্য সচেতনতা কার্যক্রম।</p>
+      </div>
+      <div class="activity-card reveal">
+        <div class="activity-icon">🌿</div>
+        <h3>পরিবেশ রক্ষা</h3>
+        <p>বৃক্ষরোপণ, পরিষ্কার অভিযান এবং পরিবেশ সচেতনতামূলক কর্মসূচি পরিচালনা।</p>
+      </div>
+      <div class="activity-card reveal">
+        <div class="activity-icon">🎯</div>
+        <h3>যুব উন্নয়ন</h3>
+        <p>তরুণদের নেতৃত্ব প্রশিক্ষণ, ক্যারিয়ার গাইডেন্স এবং দক্ষতা উন্নয়ন কার্যক্রম।</p>
+      </div>
+      <div class="activity-card reveal">
+        <div class="activity-icon">🤝</div>
+        <h3>দুর্যোগ সহায়তা</h3>
+        <p>প্রাকৃতিক দুর্যোগে ক্ষতিগ্রস্তদের পাশে দাঁড়িয়ে ত্রাণ ও পুনর্বাসন সহায়তা।</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+
+<!-- GALLERY -->
+<section id="gallery" class="section-alt">
+  <div class="container">
+    <div class="section-header reveal">
+      <div class="section-tag">গ্যালারি</div>
+      <h2 class="section-title">আমাদের কার্যক্রমের ছবি</h2>
+      <p class="section-desc">আমাদের বিভিন্ন অনুষ্ঠান ও কর্মসূচির স্মৃতি</p>
+    </div>
+    <div class="gallery-grid reveal">
+      <div class="gallery-item">
+        <div class="gallery-item-bg" style="background: #e8f5ee;">📚</div>
+        <div class="gallery-overlay">শিক্ষা বিতরণ ২০২৫</div>
+      </div>
+
+      <div class="gallery-item">
+        <div class="gallery-item-bg" style="background: #f1f8e9;">🌿</div>
+        <div class="gallery-overlay">বৃক্ষরোপণ ২০২৫</div>
+      </div>
+      <div class="gallery-item">
+        <div class="gallery-item-bg" style="background: #fce4ec;">🤝</div>
+        <div class="gallery-overlay">ত্রাণ বিতরণ ২০২৪</div>
+      </div>
+
+      <div class="gallery-item">
+        <div class="gallery-item-bg" style="background: #e8eaf6;">❤️</div>
+        <div class="gallery-overlay">রক্তদান ২০২৪</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- COMMITTEE -->
+<section id="committee">
+  <div class="container">
+    <div class="section-header reveal">
+      <div class="section-tag">কমিটি</div>
+      <h2 class="section-title">কার্যনির্বাহী কমিটি</h2>
+      <p class="section-desc">আমাদের নেতৃত্বে যারা আছেন</p>
+    </div>
+    <div class="committee-grid reveal">
+      <div class="member-card">
+        <div class="member-avatar">👨</div>
+        <div class="member-name">সভাপতি</div>
+        <div class="member-role">সভাপতি</div>
+      </div>
+      <div class="member-card">
+        <div class="member-avatar">👨‍💼</div>
+        <div class="member-name">সাধারণ সম্পাদক</div>
+        <div class="member-role">সাধারণ সম্পাদক</div>
+      </div>
+      <div class="member-card">
+        <div class="member-avatar">👩</div>
+        <div class="member-name">সহ-সভাপতি</div>
+        <div class="member-role">সহ-সভাপতি</div>
+      </div>
+      <div class="member-card">
+        <div class="member-avatar">🧑</div>
+        <div class="member-name">কোষাধ্যক্ষ</div>
+        <div class="member-role">কোষাধ্যক্ষ</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- JOIN / MEMBERSHIP -->
+<section id="join" class="section-alt">
+  <div class="container">
+    <div class="section-header reveal">
+      <div class="section-tag">সদস্যপদ</div>
+      <h2 class="section-title">আমাদের সাথে যোগ দিন</h2>
+      <p class="section-desc">তারুণের আলোর পরিবারে স্বাগতম</p>
+    </div>
+    <div class="membership-grid reveal">
+      <div class="form-card">
+        <h3>📝 সদস্যপদ ফর্ম</h3>
+        <div class="form-group">
+          <label>পূর্ণ নাম</label>
+          <input type="text" placeholder="আপনার নাম লিখুন">
+        </div>
+        <div class="form-group">
+          <label>মোবাইল নম্বর</label>
+          <input type="tel" placeholder="+880-XXXXXXXXXX">
+        </div>
+        <div class="form-group">
+          <label>ইমেইল ঠিকানা</label>
+          <input type="email" placeholder="email@example.com">
+        </div>
+        <div class="form-group">
+          <label>পেশা</label>
+          <select>
+            <option>পেশা নির্বাচন করুন</option>
+            <option>ছাত্র/ছাত্রী</option>
+            <option>চাকরিজীবী</option>
+            <option>ব্যবসায়ী</option>
+            <option>অন্যান্য</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>কেন যোগ দিতে চান?</label>
+          <textarea placeholder="সংক্ষেপে জানান..."></textarea>
+        </div>
+        <button class="btn-submit" onclick="alert('আপনার আবেদন গ্রহণ করা হয়েছে! শীঘ্রই যোগাযোগ করা হবে।')">আবেদন করুন →</button>
+      </div>
+      <div class="join-benefits">
+
+        <!-- DONATION -->
+        <div class="donation-box" style="margin-top: 2rem;">
+          <h3>💛 অনুদান করুন</h3>
+          <p>আপনার সামান্য সহায়তা অনেক মানুষের জীবন বদলে দিতে পারে</p>
+          <div class="payment-methods">
+            <div class="pay-method">📱 bKash</div>
+            <div class="pay-method">💳 Nagad</div>
+            <div class="pay-method">🏦 Bank</div>
+          </div>
+          <button class="btn-primary" onclick="alert('অনুদানের জন্য যোগাযোগ: +880-XXXXXXXXXX')">অনুদান দিন</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CONTACT -->
+<section id="contact">
+  <div class="container">
+    <div class="section-header reveal">
+      <div class="section-tag">যোগাযোগ</div>
+      <h2 class="section-title">আমাদের সাথে যোগাযোগ করুন</h2>
+    </div>
+    <div class="contact-grid reveal">
+      <div class="contact-info">
+        <h2>আমরা সবসময় আপনার পাশে আছি</h2>
+        <p>যেকোনো প্রশ্ন, পরামর্শ বা সহায়তার জন্য আমাদের সাথে যোগাযোগ করুন।</p>
+        <div class="contact-item">
+          <div class="contact-icon">📍</div>
+          <div class="contact-detail">
+            <strong>ঠিকানা</strong>
+            <span>পশ্চিম সন্না, ২ নং বাকিল, হাজীগঞ্জ, চাঁদপুর।</span>
+          </div>
+        </div>
+        <div class="contact-item">
+          <div class="contact-icon">📞</div>
+          <div class="contact-detail">
+            <strong>ফোন</strong>
+            <a href="tel:+8801874165501" style="color:var(--text);text-decoration:none;font-size:0.95rem;font-weight:500;">018741-65501</a>
+          </div>
+        </div>
+        <div class="contact-item">
+          <div class="contact-icon">✉️</div>
+          <div class="contact-detail">
+            <strong>ইমেইল</strong>
+            <a href="mailto:md.mahfuz24net@gmail.com" style="color:var(--green);text-decoration:none;font-size:0.95rem;font-weight:500;">md.mahfuz24net@gmail.com</a>
+          </div>
+        </div>
+        <div class="contact-item">
+          <div class="contact-icon">⏰</div>
+          <div class="contact-detail">
+            <strong>সময়</strong>
+            <span>শনি–বৃহস্পতি: সকাল ৯টা – রাত ৮টা</span>
+          </div>
+        </div>
+        <div class="social-links">
+          <a class="social-btn" href="https://m.me/j/AbbfFaxWLeZ41F9s/?send_source=gc%3Acopy_invite_link_t" target="_blank" title="Facebook">f</a>
+          <a class="social-btn" href="#" title="YouTube">▶</a>
+          <a class="social-btn" href="#" title="WhatsApp">W</a>
+          <a class="social-btn" href="#" title="Instagram">📷</a>
+        </div>
+      </div>
+      <div class="form-card">
+        <h3>💬 বার্তা পাঠান</h3>
+        <div class="form-group">
+          <label>নাম</label>
+          <input type="text" placeholder="আপনার নাম">
+        </div>
+        <div class="form-group">
+          <label>ফোন / ইমেইল</label>
+          <input type="text" placeholder="যোগাযোগের তথ্য">
+        </div>
+        <div class="form-group">
+          <label>বিষয়</label>
+          <input type="text" placeholder="কি বিষয়ে জানতে চান?">
+        </div>
+        <div class="form-group">
+          <label>বার্তা</label>
+          <textarea placeholder="আপনার বার্তা লিখুন..." style="height: 120px;"></textarea>
+        </div>
+        <button class="btn-submit" onclick="alert('আপনার বার্তা পাঠানো হয়েছে! ধন্যবাদ।')">বার্তা পাঠান →</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:0.75rem;">
+        <div style="width:36px;height:36px;background:var(--gold);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;">🌟</div>
+        <div style="font-family:'Noto Serif Bengali',serif;font-size:1.1rem;font-weight:700;color:#fff;">তারুণের আলো</div>
+      </div>
+      <p>আলো ছড়াই, জীবন বদলাই। সমাজের প্রতিটি মানুষের জীবনমান উন্নয়নে আমরা প্রতিশ্রুতিবদ্ধ।</p>
+    </div>
+    <div class="footer-col">
+      <h4>কার্যক্রম</h4>
+      <ul>
+        <li><a href="#">শিক্ষা সহায়তা</a></li>
+        <li><a href="#">স্বাস্থ্যসেবা</a></li>
+        <li><a href="#">পরিবেশ রক্ষা</a></li>
+        <li><a href="#">যুব উন্নয়ন</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>দ্রুত লিংক</h4>
+      <ul>
+        <li><a href="#about">আমাদের সম্পর্কে</a></li>
+        <li><a href="#events">ইভেন্ট</a></li>
+        <li><a href="#gallery">গ্যালারি</a></li>
+        <li><a href="#committee">কমিটি</a></li>
+        <li><a href="#join">যোগ দিন</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>যোগাযোগ</h4>
+      <ul>
+        <li><a href="#">📍 পশ্চিম সন্না, হাজীগঞ্জ, চাঁদপুর</a></li>
+        <li><a href="tel:+8801874165501">📞 018741-65501</a></li>
+        <li><a href="mailto:md.mahfuz24net@gmail.com">✉️ md.mahfuz24net@gmail.com</a></li>
+        <li><a href="https://m.me/j/AbbfFaxWLeZ41F9s/?send_source=gc%3Acopy_invite_link_t" target="_blank">📘 Facebook পেজ</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>© ২০২৬ তারুণের আলো সামাজিক সংগঠন। সর্বস্বত্ব সংরক্ষিত।</span>
+    <span>আলো ছড়াই, জীবন বদলাই 🌟</span>
+  </div>
+
+  <div style="max-width:1100px;margin:1rem auto 0;padding-top:1rem;border-top:1px solid rgba(255,255,255,0.08);text-align:center;font-size:0.8rem;color:rgba(255,255,255,0.5);">
+    ওয়েব ডিজাইনার: <strong style="color:rgba(255,255,255,0.75);">মোঃ মাহফুজ</strong> &nbsp;|&nbsp;
+    ফোন: <a href="tel:+8801874165501" style="color:rgba(255,255,255,0.75);text-decoration:none;">018741-65501</a>
+  </div>
+</footer>
+
+<script>
+  const reveals = document.querySelectorAll('.reveal');
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); } });
+  }, { threshold: 0.1 });
+  reveals.forEach(el => observer.observe(el));
+
+  document.querySelectorAll('a[href^="#"]').forEach(a => {
+    a.addEventListener('click', e => {
+      const target = document.querySelector(a.getAttribute('href'));
+      if (target) { e.preventDefault(); target.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+    });
+  });
+</script>
+</body>
+</html>
