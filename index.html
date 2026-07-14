@@ -892,7 +892,7 @@
           <label>কেন যোগ দিতে চান?</label>
           <textarea placeholder="সংক্ষেপে জানান..."></textarea>
         </div>
-        <button class="btn-submit" onclick="alert('আপনার আবেদন গ্রহণ করা হয়েছে! শীঘ্রই যোগাযোগ করা হবে।')">আবেদন করুন →</button>
+        <button class="btn-submit" onclick="window.open('https://docs.google.com/forms/d/e/1FAIpQLSewV2B1G7ifh0jRHfp-uDQai1RRl6WAuXF7flSy62U2SVsWGQ/viewform?usp=publish-editor','_blank')">আবেদন করুন →</button>
       </div>
       <div class="join-benefits">
 
@@ -1045,6 +1045,275 @@
       if (target) { e.preventDefault(); target.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
     });
   });
+
+  // ======== USER SYSTEM ========
+  const STORAGE_KEY = 'taruner_alo_users';
+  const SESSION_KEY = 'taruner_alo_session';
+
+  function getUsers() {
+    const d = localStorage.getItem(STORAGE_KEY);
+    if (d) return JSON.parse(d);
+    const defaults = [
+      { id: 1, name: 'মোঃ মাহফুজ', username: 'admin', password: 'admin123', role: 'admin', phone: '018741-65501', joined: '২০২৬' }
+    ];
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(defaults));
+    return defaults;
+  }
+  function saveUsers(u) { localStorage.setItem(STORAGE_KEY, JSON.stringify(u)); }
+  function getSession() { const d = localStorage.getItem(SESSION_KEY); return d ? JSON.parse(d) : null; }
+  function setSession(u) { localStorage.setItem(SESSION_KEY, JSON.stringify(u)); }
+  function clearSession() { localStorage.removeItem(SESSION_KEY); }
+
+  // NAV login button
+  const navInner = document.querySelector('.nav-inner');
+  const loginBtn = document.createElement('button');
+  loginBtn.id = 'nav-login-btn';
+  loginBtn.style.cssText = 'background:rgba(255,255,255,0.15);color:#fff;border:1px solid rgba(255,255,255,0.4);padding:0.4rem 1.1rem;border-radius:20px;font-family:Hind Siliguri,sans-serif;font-size:0.9rem;cursor:pointer;transition:all 0.2s;';
+  loginBtn.onmouseover = () => loginBtn.style.background = 'rgba(255,255,255,0.25)';
+  loginBtn.onmouseout = () => loginBtn.style.background = 'rgba(255,255,255,0.15)';
+  navInner.appendChild(loginBtn);
+
+  function updateNavBtn() {
+    const s = getSession();
+    loginBtn.textContent = s ? `👤 ${s.name.split(' ')[0]}` : '🔐 লগইন';
+    loginBtn.onclick = s ? showDashboard : showLoginModal;
+  }
+
+  // MODAL BASE
+  function createModal(content) {
+    const overlay = document.createElement('div');
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:9999;display:flex;align-items:center;justify-content:center;padding:1rem;';
+    overlay.innerHTML = `<div style="background:#fff;border-radius:16px;padding:2rem;width:100%;max-width:440px;max-height:90vh;overflow-y:auto;position:relative;box-shadow:0 20px 60px rgba(0,0,0,0.3);">${content}</div>`;
+    overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
+    document.body.appendChild(overlay);
+    return overlay;
+  }
+
+  // LOGIN MODAL
+  function showLoginModal() {
+    const m = createModal(`
+      <div style="text-align:center;margin-bottom:1.5rem;">
+        <div style="width:56px;height:56px;background:#e8f5ee;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.6rem;margin:0 auto 0.75rem;">🔐</div>
+        <h2 style="font-family:Noto Serif Bengali,serif;color:#1B4F72;font-size:1.4rem;">লগইন করুন</h2>
+        <p style="color:#888;font-size:0.85rem;">তারুণের আলো সদস্য পোর্টাল</p>
+      </div>
+      <div id="login-err" style="display:none;background:#fee;color:#c00;padding:0.6rem 1rem;border-radius:8px;font-size:0.88rem;margin-bottom:1rem;"></div>
+      <div style="margin-bottom:1rem;">
+        <label style="display:block;font-size:0.85rem;color:#666;margin-bottom:0.35rem;font-weight:500;">ইউজারনেম</label>
+        <input id="li-user" type="text" placeholder="username" style="width:100%;padding:0.65rem 1rem;border:1px solid #ddeee5;border-radius:8px;font-size:0.95rem;outline:none;font-family:inherit;">
+      </div>
+      <div style="margin-bottom:1.5rem;">
+        <label style="display:block;font-size:0.85rem;color:#666;margin-bottom:0.35rem;font-weight:500;">পাসওয়ার্ড</label>
+        <input id="li-pass" type="password" placeholder="••••••••" style="width:100%;padding:0.65rem 1rem;border:1px solid #ddeee5;border-radius:8px;font-size:0.95rem;outline:none;font-family:inherit;">
+      </div>
+      <button onclick="doLogin()" style="width:100%;background:#1B6B3A;color:#fff;border:none;padding:0.85rem;border-radius:8px;font-size:1rem;font-family:inherit;font-weight:600;cursor:pointer;">লগইন করুন →</button>
+    `);
+    document.getElementById('li-pass').addEventListener('keydown', e => { if(e.key==='Enter') doLogin(); });
+  }
+
+  window.doLogin = function() {
+    const u = document.getElementById('li-user').value.trim();
+    const p = document.getElementById('li-pass').value.trim();
+    const users = getUsers();
+    const found = users.find(x => x.username === u && x.password === p);
+    if (!found) {
+      const err = document.getElementById('login-err');
+      err.style.display = 'block';
+      err.textContent = '❌ ইউজারনেম বা পাসওয়ার্ড ভুল!';
+      return;
+    }
+    setSession(found);
+    document.querySelector('.fixed, [style*="position:fixed"]') && document.querySelectorAll('div[style*="position:fixed"]').forEach(e => e.remove());
+    updateNavBtn();
+    showDashboard();
+  };
+
+  // DASHBOARD
+  function showDashboard() {
+    const s = getSession();
+    if (!s) return showLoginModal();
+
+    if (s.role === 'admin') showAdminPanel();
+    else showUserPanel();
+  }
+
+  // ADMIN PANEL
+  function showAdminPanel() {
+    renderAdminPanel();
+  }
+
+  function renderAdminPanel() {
+    document.querySelectorAll('div[style*="position:fixed"]').forEach(e => e.remove());
+    const users = getUsers();
+    const members = users.filter(u => u.role !== 'admin');
+
+    const rows = members.length ? members.map(u => `
+      <tr style="border-bottom:1px solid #f0f0f0;">
+        <td style="padding:0.75rem 0.5rem;">${u.name}</td>
+        <td style="padding:0.75rem 0.5rem;color:#666;">${u.username}</td>
+        <td style="padding:0.75rem 0.5rem;color:#666;">${u.phone||'-'}</td>
+        <td style="padding:0.75rem 0.5rem;"><span style="background:#e8f5ee;color:#1B6B3A;padding:0.2rem 0.6rem;border-radius:4px;font-size:0.78rem;">${u.role==='sub'?'Sub User':'সদস্য'}</span></td>
+        <td style="padding:0.75rem 0.5rem;"><button onclick="deleteUser(${u.id})" style="background:#fee;color:#c00;border:1px solid #fcc;padding:0.25rem 0.6rem;border-radius:6px;cursor:pointer;font-size:0.8rem;">বাদ দিন</button></td>
+      </tr>`).join('') : `<tr><td colspan="5" style="text-align:center;padding:2rem;color:#aaa;">কোনো সদস্য নেই</td></tr>`;
+
+    const m = createModal(`
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;">
+        <div>
+          <h2 style="font-family:Noto Serif Bengali,serif;color:#1B4F72;font-size:1.3rem;">⚙️ Admin Panel</h2>
+          <p style="color:#888;font-size:0.8rem;">মোট সদস্য: ${members.length} জন</p>
+        </div>
+        <button onclick="doLogout()" style="background:#fee;color:#c00;border:1px solid #fcc;padding:0.4rem 0.9rem;border-radius:8px;cursor:pointer;font-size:0.85rem;">লগআউট</button>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;margin-bottom:1.5rem;">
+        <div style="background:#e8f5ee;border-radius:10px;padding:1rem;text-align:center;">
+          <div style="font-size:1.8rem;font-weight:700;color:#1B6B3A;">${members.length}</div>
+          <div style="font-size:0.8rem;color:#555;">মোট সদস্য</div>
+        </div>
+        <div style="background:#fff8e1;border-radius:10px;padding:1rem;text-align:center;">
+          <div style="font-size:1.8rem;font-weight:700;color:#b8860b;">${users.filter(u=>u.role==='sub').length}</div>
+          <div style="font-size:0.8rem;color:#555;">Sub User</div>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:0.5rem;margin-bottom:1.25rem;">
+        <button onclick="showAddUser()" style="flex:1;background:#1B6B3A;color:#fff;border:none;padding:0.65rem;border-radius:8px;cursor:pointer;font-family:inherit;font-size:0.9rem;">➕ নতুন Sub User</button>
+      </div>
+
+      <div style="overflow-x:auto;">
+        <table style="width:100%;border-collapse:collapse;font-size:0.88rem;">
+          <thead>
+            <tr style="background:#f8fdf9;">
+              <th style="padding:0.6rem 0.5rem;text-align:left;color:#555;font-weight:600;">নাম</th>
+              <th style="padding:0.6rem 0.5rem;text-align:left;color:#555;font-weight:600;">Username</th>
+              <th style="padding:0.6rem 0.5rem;text-align:left;color:#555;font-weight:600;">ফোন</th>
+              <th style="padding:0.6rem 0.5rem;text-align:left;color:#555;font-weight:600;">ধরন</th>
+              <th style="padding:0.6rem 0.5rem;text-align:left;color:#555;font-weight:600;"></th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>
+    `);
+  }
+
+  // ADD USER
+  window.showAddUser = function() {
+    document.querySelectorAll('div[style*="position:fixed"]').forEach(e => e.remove());
+    const m = createModal(`
+      <div style="text-align:center;margin-bottom:1.5rem;">
+        <h2 style="font-family:Noto Serif Bengali,serif;color:#1B4F72;font-size:1.3rem;">➕ নতুন Sub User তৈরি</h2>
+      </div>
+      <div id="add-err" style="display:none;background:#fee;color:#c00;padding:0.6rem 1rem;border-radius:8px;font-size:0.88rem;margin-bottom:1rem;"></div>
+      <div style="margin-bottom:1rem;">
+        <label style="display:block;font-size:0.85rem;color:#666;margin-bottom:0.35rem;font-weight:500;">পূর্ণ নাম</label>
+        <input id="au-name" type="text" placeholder="সদস্যের নাম" style="width:100%;padding:0.65rem 1rem;border:1px solid #ddeee5;border-radius:8px;font-size:0.95rem;outline:none;font-family:inherit;">
+      </div>
+      <div style="margin-bottom:1rem;">
+        <label style="display:block;font-size:0.85rem;color:#666;margin-bottom:0.35rem;font-weight:500;">ইউজারনেম</label>
+        <input id="au-user" type="text" placeholder="username (ইংরেজিতে)" style="width:100%;padding:0.65rem 1rem;border:1px solid #ddeee5;border-radius:8px;font-size:0.95rem;outline:none;font-family:inherit;">
+      </div>
+      <div style="margin-bottom:1rem;">
+        <label style="display:block;font-size:0.85rem;color:#666;margin-bottom:0.35rem;font-weight:500;">পাসওয়ার্ড</label>
+        <input id="au-pass" type="text" placeholder="পাসওয়ার্ড" style="width:100%;padding:0.65rem 1rem;border:1px solid #ddeee5;border-radius:8px;font-size:0.95rem;outline:none;font-family:inherit;">
+      </div>
+      <div style="margin-bottom:1.5rem;">
+        <label style="display:block;font-size:0.85rem;color:#666;margin-bottom:0.35rem;font-weight:500;">ফোন নম্বর</label>
+        <input id="au-phone" type="text" placeholder="01XXXXXXXXX" style="width:100%;padding:0.65rem 1rem;border:1px solid #ddeee5;border-radius:8px;font-size:0.95rem;outline:none;font-family:inherit;">
+      </div>
+      <div style="display:flex;gap:0.75rem;">
+        <button onclick="renderAdminPanel()" style="flex:1;background:#f5f5f5;color:#555;border:1px solid #ddd;padding:0.75rem;border-radius:8px;cursor:pointer;font-family:inherit;">← ফিরে যান</button>
+        <button onclick="doAddUser()" style="flex:2;background:#1B6B3A;color:#fff;border:none;padding:0.75rem;border-radius:8px;font-size:1rem;font-family:inherit;font-weight:600;cursor:pointer;">তৈরি করুন ✓</button>
+      </div>
+    `);
+  };
+
+  window.doAddUser = function() {
+    const name = document.getElementById('au-name').value.trim();
+    const username = document.getElementById('au-user').value.trim();
+    const password = document.getElementById('au-pass').value.trim();
+    const phone = document.getElementById('au-phone').value.trim();
+    const err = document.getElementById('add-err');
+
+    if (!name || !username || !password) {
+      err.style.display = 'block';
+      err.textContent = '❌ নাম, ইউজারনেম ও পাসওয়ার্ড দিন!';
+      return;
+    }
+    const users = getUsers();
+    if (users.find(u => u.username === username)) {
+      err.style.display = 'block';
+      err.textContent = '❌ এই ইউজারনেম আগেই আছে!';
+      return;
+    }
+    const newUser = { id: Date.now(), name, username, password, role: 'sub', phone, joined: '২০২৬' };
+    users.push(newUser);
+    saveUsers(users);
+    renderAdminPanel();
+  };
+
+  window.deleteUser = function(id) {
+    if (!confirm('এই সদস্যকে বাদ দিবেন?')) return;
+    const users = getUsers().filter(u => u.id !== id);
+    saveUsers(users);
+    renderAdminPanel();
+  };
+
+  // SUB USER PANEL
+  function showUserPanel() {
+    document.querySelectorAll('div[style*="position:fixed"]').forEach(e => e.remove());
+    const s = getSession();
+    const users = getUsers();
+    const members = users.filter(u => u.role !== 'admin');
+
+    const rows = members.map(u => `
+      <tr style="border-bottom:1px solid #f0f0f0;${u.id===s.id?'background:#f0faf4;':''}">
+        <td style="padding:0.7rem 0.5rem;">${u.id===s.id?'<strong>'+u.name+' (আপনি)</strong>':u.name}</td>
+        <td style="padding:0.7rem 0.5rem;color:#666;">${u.phone||'-'}</td>
+        <td style="padding:0.7rem 0.5rem;"><span style="background:#e8f5ee;color:#1B6B3A;padding:0.2rem 0.6rem;border-radius:4px;font-size:0.78rem;">সদস্য</span></td>
+      </tr>`).join('');
+
+    createModal(`
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;">
+        <div>
+          <h2 style="font-family:Noto Serif Bengali,serif;color:#1B4F72;font-size:1.3rem;">👤 সদস্য পোর্টাল</h2>
+          <p style="color:#888;font-size:0.8rem;">স্বাগতম, ${s.name}!</p>
+        </div>
+        <button onclick="doLogout()" style="background:#fee;color:#c00;border:1px solid #fcc;padding:0.4rem 0.9rem;border-radius:8px;cursor:pointer;font-size:0.85rem;">লগআউট</button>
+      </div>
+
+      <div style="background:#e8f5ee;border-radius:10px;padding:1.25rem;margin-bottom:1.5rem;display:flex;align-items:center;gap:1rem;">
+        <div style="width:50px;height:50px;background:#1B6B3A;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.4rem;">👤</div>
+        <div>
+          <div style="font-weight:600;color:#1B4F72;">${s.name}</div>
+          <div style="font-size:0.82rem;color:#555;">ইউজারনেম: ${s.username}</div>
+          <div style="font-size:0.82rem;color:#555;">ফোন: ${s.phone||'-'}</div>
+        </div>
+      </div>
+
+      <h3 style="font-size:0.95rem;color:#1B4F72;margin-bottom:0.75rem;font-weight:600;">📋 সদস্যদের তালিকা (${members.length} জন)</h3>
+      <div style="overflow-x:auto;">
+        <table style="width:100%;border-collapse:collapse;font-size:0.88rem;">
+          <thead>
+            <tr style="background:#f8fdf9;">
+              <th style="padding:0.6rem 0.5rem;text-align:left;color:#555;font-weight:600;">নাম</th>
+              <th style="padding:0.6rem 0.5rem;text-align:left;color:#555;font-weight:600;">ফোন</th>
+              <th style="padding:0.6rem 0.5rem;text-align:left;color:#555;font-weight:600;">অবস্থান</th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>
+    `);
+  }
+
+  window.doLogout = function() {
+    clearSession();
+    document.querySelectorAll('div[style*="position:fixed"]').forEach(e => e.remove());
+    updateNavBtn();
+  };
+
+  updateNavBtn();
 </script>
 </body>
 </html>
