@@ -1124,6 +1124,21 @@
     }
   }
 
+  // SAVINGS (সঞ্চয়) STORAGE
+  const SAVINGS_KEY = 'taruner_alo_savings';
+  function getSavings() {
+    const d = localStorage.getItem(SAVINGS_KEY);
+    return d ? JSON.parse(d) : [];
+  }
+  function saveSavings(s) {
+    try {
+      localStorage.setItem(SAVINGS_KEY, JSON.stringify(s));
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
   function renderCommittee() {
     const grid = document.getElementById('committee-grid');
     if (!grid) return;
@@ -1317,53 +1332,58 @@
     panel.id = 'admin-fullpage';
     panel.style.cssText = 'position:fixed;inset:0;background:#f8fdf9;z-index:9999;overflow-y:auto;';
     panel.innerHTML = `
-      <div style="background:#1B6B3A;color:#fff;padding:1rem 2rem;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10;box-shadow:0 2px 12px rgba(0,0,0,0.15);">
+      <div style="background:linear-gradient(135deg,#1B6B3A 0%,#0d3d20 100%);color:#fff;padding:1.1rem 2rem;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10;box-shadow:0 4px 20px rgba(0,0,0,0.25);border-bottom:3px solid #f0c040;">
         <div style="display:flex;align-items:center;gap:12px;">
-          <div style="width:36px;height:36px;background:rgba(255,255,255,0.2);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.1rem;">⚙️</div>
+          <div style="width:44px;height:44px;background:linear-gradient(135deg,#f0c040,#e08a1e);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.3rem;box-shadow:0 3px 10px rgba(0,0,0,0.25);">⚙️</div>
           <div>
-            <div style="font-family:Noto Serif Bengali,serif;font-size:1.15rem;font-weight:700;">Admin Panel</div>
-            <div style="font-size:0.75rem;opacity:0.75;">তারুণের আলো সামাজিক সংগঠন</div>
+            <div style="font-family:Noto Serif Bengali,serif;font-size:1.25rem;font-weight:700;">Admin Panel</div>
+            <div style="font-size:0.78rem;opacity:0.85;">তারুণের আলো সামাজিক সংগঠন</div>
           </div>
         </div>
-        <button onclick="doLogout()" style="background:rgba(255,255,255,0.15);color:#fff;border:1px solid rgba(255,255,255,0.3);padding:0.4rem 1rem;border-radius:8px;cursor:pointer;font-family:inherit;font-size:0.88rem;">লগআউট</button>
+        <button onclick="doLogout()" style="background:linear-gradient(135deg,#e74c3c,#c0392b);color:#fff;border:none;padding:0.5rem 1.2rem;border-radius:10px;cursor:pointer;font-family:inherit;font-size:0.9rem;font-weight:600;box-shadow:0 3px 10px rgba(0,0,0,0.2);">🚪 লগআউট</button>
       </div>
 
       <div style="max-width:1000px;margin:2rem auto;padding:0 1.5rem;">
 
         <!-- STATS -->
         <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-bottom:2rem;">
-          <div style="background:#fff;border-radius:12px;padding:1.25rem;text-align:center;border:1px solid #ddeee5;box-shadow:0 2px 8px rgba(0,0,0,0.04);">
-            <div style="font-size:2rem;font-weight:700;color:#1B6B3A;">${members.length}</div>
-            <div style="font-size:0.82rem;color:#666;margin-top:4px;">মোট সদস্য</div>
+          <div style="background:linear-gradient(145deg,#e8f8ee,#d1f0dc);border-radius:14px;padding:1.25rem;text-align:center;border:1px solid #b8e6c8;box-shadow:0 4px 14px rgba(27,107,58,0.15);">
+            <div style="width:44px;height:44px;background:linear-gradient(135deg,#1B6B3A,#2e9e5b);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.3rem;margin:0 auto 0.5rem;box-shadow:0 3px 8px rgba(27,107,58,0.3);">👥</div>
+            <div style="font-size:2rem;font-weight:800;color:#1B6B3A;">${members.length}</div>
+            <div style="font-size:0.82rem;color:#3a6b4f;margin-top:2px;font-weight:600;">মোট সদস্য</div>
           </div>
-          <div style="background:#fff;border-radius:12px;padding:1.25rem;text-align:center;border:1px solid #ddeee5;box-shadow:0 2px 8px rgba(0,0,0,0.04);">
-            <div style="font-size:2rem;font-weight:700;color:#b8860b;">${unreadApps}</div>
-            <div style="font-size:0.82rem;color:#666;margin-top:4px;">নতুন আবেদন</div>
+          <div style="background:linear-gradient(145deg,#fff8e6,#ffefc4);border-radius:14px;padding:1.25rem;text-align:center;border:1px solid #f5deA0;box-shadow:0 4px 14px rgba(184,134,11,0.15);">
+            <div style="width:44px;height:44px;background:linear-gradient(135deg,#e6a817,#b8860b);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.3rem;margin:0 auto 0.5rem;box-shadow:0 3px 8px rgba(184,134,11,0.3);">📋</div>
+            <div style="font-size:2rem;font-weight:800;color:#b8860b;">${unreadApps}</div>
+            <div style="font-size:0.82rem;color:#8a6a1f;margin-top:2px;font-weight:600;">নতুন আবেদন</div>
           </div>
-          <div style="background:#fff;border-radius:12px;padding:1.25rem;text-align:center;border:1px solid #ddeee5;box-shadow:0 2px 8px rgba(0,0,0,0.04);">
-            <div style="font-size:2rem;font-weight:700;color:#1B4F72;">${unreadMsgs}</div>
-            <div style="font-size:0.82rem;color:#666;margin-top:4px;">অপঠিত বার্তা</div>
+          <div style="background:linear-gradient(145deg,#eaf4ff,#d3e9ff);border-radius:14px;padding:1.25rem;text-align:center;border:1px solid #b0d4f5;box-shadow:0 4px 14px rgba(27,79,114,0.15);">
+            <div style="width:44px;height:44px;background:linear-gradient(135deg,#2e7ec2,#1B4F72);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.3rem;margin:0 auto 0.5rem;box-shadow:0 3px 8px rgba(27,79,114,0.3);">💬</div>
+            <div style="font-size:2rem;font-weight:800;color:#1B4F72;">${unreadMsgs}</div>
+            <div style="font-size:0.82rem;color:#2c5a7a;margin-top:2px;font-weight:600;">অপঠিত বার্তা</div>
           </div>
-          <div style="background:#fff;border-radius:12px;padding:1.25rem;text-align:center;border:1px solid #ddeee5;box-shadow:0 2px 8px rgba(0,0,0,0.04);">
-            <div style="font-size:2rem;font-weight:700;color:#555;">${apps.length}</div>
-            <div style="font-size:0.82rem;color:#666;margin-top:4px;">মোট আবেদন</div>
+          <div style="background:linear-gradient(145deg,#f3ecfb,#e6d6f7);border-radius:14px;padding:1.25rem;text-align:center;border:1px solid #d9bdf0;box-shadow:0 4px 14px rgba(142,68,173,0.15);">
+            <div style="width:44px;height:44px;background:linear-gradient(135deg,#a569c9,#8e44ad);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.3rem;margin:0 auto 0.5rem;box-shadow:0 3px 8px rgba(142,68,173,0.3);">📊</div>
+            <div style="font-size:2rem;font-weight:800;color:#8e44ad;">${apps.length}</div>
+            <div style="font-size:0.82rem;color:#6c3483;margin-top:2px;font-weight:600;">মোট আবেদন</div>
           </div>
         </div>
 
         <!-- ACTION BUTTONS -->
         <div style="display:flex;gap:1rem;margin-bottom:2rem;flex-wrap:wrap;">
-          <button onclick="showAddUserFull()" style="background:#1B6B3A;color:#fff;border:none;padding:0.75rem 1.5rem;border-radius:10px;cursor:pointer;font-family:inherit;font-size:0.95rem;font-weight:600;">➕ নতুন Sub User তৈরি</button>
-          <button onclick="showApplicationsFull()" style="background:#fff;color:#b8860b;border:2px solid #f0c040;padding:0.75rem 1.5rem;border-radius:10px;cursor:pointer;font-family:inherit;font-size:0.95rem;font-weight:600;">📋 আবেদনসমূহ ${unreadApps > 0 ? `<span style="background:#e74c3c;color:#fff;border-radius:50%;padding:2px 7px;font-size:0.75rem;margin-left:4px;">${unreadApps}</span>` : ''}</button>
-          <button onclick="showMessagesFull()" style="background:#fff;color:#1B4F72;border:2px solid #aad4f5;padding:0.75rem 1.5rem;border-radius:10px;cursor:pointer;font-family:inherit;font-size:0.95rem;font-weight:600;">💬 বার্তাসমূহ ${unreadMsgs > 0 ? `<span style="background:#e74c3c;color:#fff;border-radius:50%;padding:2px 7px;font-size:0.75rem;margin-left:4px;">${unreadMsgs}</span>` : ''}</button>
-          <button onclick="showGalleryFull()" style="background:#fff;color:#8e44ad;border:2px solid #d9b3ec;padding:0.75rem 1.5rem;border-radius:10px;cursor:pointer;font-family:inherit;font-size:0.95rem;font-weight:600;">🖼️ গ্যালারি ব্যবস্থাপনা</button>
-          <button onclick="showCommitteeFull()" style="background:#fff;color:#c0392b;border:2px solid #f0b3ab;padding:0.75rem 1.5rem;border-radius:10px;cursor:pointer;font-family:inherit;font-size:0.95rem;font-weight:600;">🧑‍🤝‍🧑 কমিটি ব্যবস্থাপনা</button>
+          <button onclick="showAddUserFull()" style="background:linear-gradient(135deg,#2e9e5b,#1B6B3A);color:#fff;border:none;padding:0.8rem 1.6rem;border-radius:12px;cursor:pointer;font-family:inherit;font-size:0.95rem;font-weight:700;box-shadow:0 4px 14px rgba(27,107,58,0.35);">➕ নতুন Sub User তৈরি</button>
+          <button onclick="showApplicationsFull()" style="background:linear-gradient(135deg,#e6a817,#b8860b);color:#fff;border:none;padding:0.8rem 1.6rem;border-radius:12px;cursor:pointer;font-family:inherit;font-size:0.95rem;font-weight:700;box-shadow:0 4px 14px rgba(184,134,11,0.35);">📋 আবেদনসমূহ ${unreadApps > 0 ? `<span style="background:#e74c3c;color:#fff;border-radius:50%;padding:2px 7px;font-size:0.75rem;margin-left:4px;">${unreadApps}</span>` : ''}</button>
+          <button onclick="showMessagesFull()" style="background:linear-gradient(135deg,#2e7ec2,#1B4F72);color:#fff;border:none;padding:0.8rem 1.6rem;border-radius:12px;cursor:pointer;font-family:inherit;font-size:0.95rem;font-weight:700;box-shadow:0 4px 14px rgba(27,79,114,0.35);">💬 বার্তাসমূহ ${unreadMsgs > 0 ? `<span style="background:#e74c3c;color:#fff;border-radius:50%;padding:2px 7px;font-size:0.75rem;margin-left:4px;">${unreadMsgs}</span>` : ''}</button>
+          <button onclick="showGalleryFull()" style="background:linear-gradient(135deg,#a569c9,#8e44ad);color:#fff;border:none;padding:0.8rem 1.6rem;border-radius:12px;cursor:pointer;font-family:inherit;font-size:0.95rem;font-weight:700;box-shadow:0 4px 14px rgba(142,68,173,0.35);">🖼️ গ্যালারি ব্যবস্থাপনা</button>
+          <button onclick="showCommitteeFull()" style="background:linear-gradient(135deg,#e05c4c,#c0392b);color:#fff;border:none;padding:0.8rem 1.6rem;border-radius:12px;cursor:pointer;font-family:inherit;font-size:0.95rem;font-weight:700;box-shadow:0 4px 14px rgba(192,57,43,0.35);">🧑‍🤝‍🧑 কমিটি ব্যবস্থাপনা</button>
+          <button onclick="showSavingsFull()" style="background:linear-gradient(135deg,#1fab89,#0d8a6f);color:#fff;border:none;padding:0.8rem 1.6rem;border-radius:12px;cursor:pointer;font-family:inherit;font-size:0.95rem;font-weight:700;box-shadow:0 4px 14px rgba(13,138,111,0.35);">💰 সঞ্চয় ব্যবস্থাপনা</button>
         </div>
 
         <!-- MEMBERS TABLE -->
-        <div style="background:#fff;border-radius:12px;border:1px solid #ddeee5;box-shadow:0 2px 8px rgba(0,0,0,0.04);overflow:hidden;margin-bottom:1.5rem;">
-          <div style="padding:1.25rem 1.5rem;border-bottom:1px solid #f0f0f0;display:flex;justify-content:space-between;align-items:center;">
-            <h3 style="font-family:Noto Serif Bengali,serif;color:#1B4F72;font-size:1.1rem;margin:0;">👥 সদস্যদের তালিকা</h3>
-            <span style="font-size:0.82rem;color:#888;">${members.length} জন সদস্য</span>
+        <div style="background:#fff;border-radius:14px;border:1px solid #ddeee5;box-shadow:0 4px 16px rgba(0,0,0,0.06);overflow:hidden;margin-bottom:1.5rem;">
+          <div style="padding:1.1rem 1.5rem;border-bottom:1px solid #f0f0f0;display:flex;justify-content:space-between;align-items:center;background:linear-gradient(135deg,#e8f8ee,#f8fdf9);">
+            <h3 style="font-family:Noto Serif Bengali,serif;color:#1B6B3A;font-size:1.1rem;margin:0;">👥 সদস্যদের তালিকা</h3>
+            <span style="font-size:0.8rem;color:#fff;background:#1B6B3A;padding:0.2rem 0.7rem;border-radius:20px;font-weight:600;">${members.length} জন সদস্য</span>
           </div>
           <div style="overflow-x:auto;">
             <table style="width:100%;border-collapse:collapse;font-size:0.9rem;">
@@ -1380,7 +1400,7 @@
                   <td style="padding:0.85rem 1rem;font-weight:600;color:#1B4F72;">${u.name}</td>
                   <td style="padding:0.85rem 1rem;color:#666;">${u.phone||'-'}</td>
                   <td style="padding:0.85rem 1rem;color:#888;font-size:0.85rem;">${u.joined||'-'}</td>
-                  <td style="padding:0.85rem 1rem;"><button onclick="deleteUser(${u.id})" style="background:#fee;color:#c00;border:1px solid #fcc;padding:0.3rem 0.75rem;border-radius:6px;cursor:pointer;font-size:0.82rem;font-family:inherit;">বাদ দিন</button></td>
+                  <td style="padding:0.85rem 1rem;"><button onclick="deleteUser(${u.id})" style="background:linear-gradient(135deg,#f36a5a,#e74c3c);color:#fff;border:none;padding:0.35rem 0.85rem;border-radius:8px;cursor:pointer;font-size:0.82rem;font-family:inherit;font-weight:600;box-shadow:0 2px 6px rgba(231,76,60,0.3);">বাদ দিন</button></td>
                 </tr>`).join('') : `<tr><td colspan="4" style="text-align:center;padding:3rem;color:#aaa;">কোনো সদস্য নেই</td></tr>`}
               </tbody>
             </table>
@@ -1388,10 +1408,10 @@
         </div>
 
         <!-- USERNAME / LOGIN TABLE -->
-        <div style="background:#fff;border-radius:12px;border:1px solid #d0e8f7;box-shadow:0 2px 8px rgba(0,0,0,0.04);overflow:hidden;">
-          <div style="padding:1.25rem 1.5rem;border-bottom:1px solid #e8f4fc;background:#f0f8ff;display:flex;justify-content:space-between;align-items:center;">
+        <div style="background:#fff;border-radius:14px;border:1px solid #d0e8f7;box-shadow:0 4px 16px rgba(0,0,0,0.06);overflow:hidden;">
+          <div style="padding:1.1rem 1.5rem;border-bottom:1px solid #e8f4fc;background:linear-gradient(135deg,#eaf4ff,#f0f8ff);display:flex;justify-content:space-between;align-items:center;">
             <h3 style="font-family:Noto Serif Bengali,serif;color:#1B4F72;font-size:1.1rem;margin:0;">🔐 Username ও Password তালিকা</h3>
-            <span style="font-size:0.82rem;color:#888;">${members.length} জন</span>
+            <span style="font-size:0.8rem;color:#fff;background:#1B4F72;padding:0.2rem 0.7rem;border-radius:20px;font-weight:600;">${members.length} জন</span>
           </div>
           <div style="overflow-x:auto;">
             <table style="width:100%;border-collapse:collapse;font-size:0.9rem;">
@@ -1951,16 +1971,20 @@
     const members = getCommittee();
     const rows = members.length ? members.map(m => `
       <div style="display:flex;align-items:center;gap:0.85rem;border:1px solid #eee;border-radius:10px;padding:0.75rem;margin-bottom:0.75rem;">
-        <div style="width:56px;height:56px;border-radius:50%;overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:1.6rem;background:#f5eaea;">
-          ${m.photo ? `<img src="${m.photo}" style="width:100%;height:100%;object-fit:cover;">` : '🧑'}
+        <div style="position:relative;flex-shrink:0;">
+          <div style="width:56px;height:56px;border-radius:50%;overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:1.6rem;background:#f5eaea;cursor:pointer;" onclick="document.getElementById('cm-edit-photo-${m.id}').click()">
+            ${m.photo ? `<img id="cm-thumb-${m.id}" src="${m.photo}" style="width:100%;height:100%;object-fit:cover;">` : '🧑'}
+          </div>
+          <div style="position:absolute;bottom:-4px;right:-4px;background:#c0392b;color:#fff;border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;font-size:0.65rem;pointer-events:none;">📷</div>
+          <input id="cm-edit-photo-${m.id}" type="file" accept="image/*" style="display:none;" onchange="changeCommitteePhoto(this, ${m.id})">
         </div>
         <div style="flex:1;min-width:0;">
           <input id="cm-name-${m.id}" type="text" value="${(m.name||'').replace(/"/g,'&quot;')}" placeholder="নাম" style="width:100%;padding:0.4rem 0.6rem;border:1px solid #ddeee5;border-radius:6px;font-size:0.88rem;font-family:inherit;margin-bottom:0.35rem;">
           <input id="cm-role-${m.id}" type="text" value="${(m.role||'').replace(/"/g,'&quot;')}" placeholder="পদবি" style="width:100%;padding:0.35rem 0.6rem;border:1px solid #ddeee5;border-radius:6px;font-size:0.8rem;font-family:inherit;color:#888;">
         </div>
-        <div style="display:flex;flex-direction:column;gap:0.35rem;flex-shrink:0;">
+        <div id="cm-actions-${m.id}" style="display:flex;flex-direction:column;gap:0.35rem;flex-shrink:0;">
           <button onclick="doSaveCommitteeMember(${m.id})" style="background:#e8f5ee;color:#1B6B3A;border:1px solid #c8e6c9;padding:0.3rem 0.7rem;border-radius:6px;cursor:pointer;font-size:0.78rem;font-family:inherit;">💾 সেভ</button>
-          <button onclick="deleteCommitteeMember(${m.id})" style="background:#fee;color:#c00;border:1px solid #fcc;padding:0.3rem 0.7rem;border-radius:6px;cursor:pointer;font-size:0.78rem;font-family:inherit;">🗑️ মুছুন</button>
+          <button onclick="askDeleteCommitteeMember(${m.id})" style="background:#fee;color:#c00;border:1px solid #fcc;padding:0.3rem 0.7rem;border-radius:6px;cursor:pointer;font-size:0.78rem;font-family:inherit;">🗑️ মুছুন</button>
         </div>
       </div>`).join('') : `<div style="text-align:center;padding:2rem;color:#aaa;">কোনো সদস্য নেই</div>`;
 
@@ -1994,7 +2018,8 @@
       </div>
 
       <!-- EXISTING MEMBERS -->
-      <h3 style="font-size:0.95rem;color:#1B4F72;margin-bottom:0.75rem;font-family:Noto Serif Bengali,serif;">বিদ্যমান সদস্যবৃন্দ (নাম/পদবি এডিট করুন)</h3>
+      <h3 style="font-size:0.95rem;color:#1B4F72;margin-bottom:0.75rem;font-family:Noto Serif Bengali,serif;">বিদ্যমান সদস্যবৃন্দ (ছবিতে ট্যাপ করে বদলান, নাম/পদবি এডিট করুন)</h3>
+      <div id="cm-list-err" style="display:none;background:#fee;color:#c00;padding:0.5rem 0.9rem;border-radius:8px;font-size:0.85rem;margin-bottom:0.75rem;"></div>
       <div style="max-height:40vh;overflow-y:auto;">${rows}</div>
     `);
   };
@@ -2005,6 +2030,35 @@
       const preview = document.getElementById('cm-preview');
       preview.innerHTML = `<img src="${dataUrl}" style="width:100%;height:100%;object-fit:cover;">`;
       preview.dataset.photo = dataUrl;
+    });
+  };
+
+  // বিদ্যমান সদস্যের ছবিতে ট্যাপ করে নতুন ছবি দিয়ে বদলানো
+  window.changeCommitteePhoto = function(input, id) {
+    if (!input.files || !input.files[0]) return;
+    compressImageFile(input.files[0], 320, 0.78, function(dataUrl) {
+      const members = getCommittee();
+      const member = members.find(m => m.id === id);
+      if (!member) return;
+      member.photo = dataUrl;
+      const thumb = document.getElementById(`cm-thumb-${id}`);
+      if (thumb) thumb.src = dataUrl;
+      const ok = saveCommittee(members);
+      renderCommittee();
+      const errBox = document.getElementById('cm-list-err');
+      if (errBox) {
+        errBox.style.display = 'block';
+        if (ok) {
+          errBox.style.background = '#e8f5ee';
+          errBox.style.color = '#1B6B3A';
+          errBox.textContent = '✅ ছবি পরিবর্তন হয়েছে!';
+          setTimeout(() => { errBox.style.display = 'none'; }, 1500);
+        } else {
+          errBox.style.background = '#fee';
+          errBox.style.color = '#c00';
+          errBox.textContent = '❌ ছবি পরিবর্তন সেভ করা যায়নি — স্টোরেজ পূর্ণ। পুরনো কিছু ছবি মুছে আবার চেষ্টা করুন।';
+        }
+      }
     });
   };
 
@@ -2034,17 +2088,219 @@
     if (!member) return;
     member.name = nameInput.value.trim();
     member.role = roleInput.value.trim();
-    saveCommittee(members);
+    const ok = saveCommittee(members);
     renderCommittee();
-    showCommitteeFull();
+    const errBox = document.getElementById('cm-list-err');
+    if (ok && errBox) {
+      errBox.style.display = 'block';
+      errBox.style.background = '#e8f5ee';
+      errBox.style.color = '#1B6B3A';
+      errBox.textContent = '✅ তথ্য সেভ হয়েছে!';
+      setTimeout(() => { errBox.style.display = 'none'; }, 1500);
+    } else if (!ok && errBox) {
+      errBox.style.display = 'block';
+      errBox.style.background = '#fee';
+      errBox.style.color = '#c00';
+      errBox.textContent = '❌ সেভ করা যায়নি — স্টোরেজ পূর্ণ।';
+    }
+  };
+
+  // native confirm() এড়িয়ে ইনলাইন নিশ্চিতকরণ
+  window.askDeleteCommitteeMember = function(id) {
+    const actions = document.getElementById(`cm-actions-${id}`);
+    if (!actions) return;
+    actions.innerHTML = `
+      <div style="font-size:0.72rem;color:#c00;font-weight:600;text-align:center;">নিশ্চিত?</div>
+      <button onclick="deleteCommitteeMember(${id})" style="background:#c00;color:#fff;border:none;padding:0.3rem 0.7rem;border-radius:6px;cursor:pointer;font-size:0.78rem;font-family:inherit;">হ্যাঁ, মুছুন</button>
+      <button onclick="showCommitteeFull()" style="background:#f5f5f5;color:#555;border:1px solid #ddd;padding:0.3rem 0.7rem;border-radius:6px;cursor:pointer;font-size:0.78rem;font-family:inherit;">বাতিল</button>
+    `;
   };
 
   window.deleteCommitteeMember = function(id) {
-    if (!confirm('এই সদস্যকে মুছে ফেলতে চান?')) return;
     const members = getCommittee().filter(m => m.id !== id);
-    saveCommittee(members);
+    const ok = saveCommittee(members);
     renderCommittee();
     showCommitteeFull();
+    if (!ok) {
+      const errBox = document.getElementById('cm-list-err');
+      if (errBox) {
+        errBox.style.display = 'block';
+        errBox.textContent = '❌ মুছে ফেলা যায়নি — লোকাল স্টোরেজে সমস্যা হয়েছে। পেজ রিফ্রেশ করে আবার চেষ্টা করুন।';
+      }
+    }
+  };
+
+  // SAVINGS MANAGEMENT PANEL
+  const BANGLA_MONTHS = ['জানুয়ারি','ফেব্রুয়ারি','মার্চ','এপ্রিল','মে','জুন','জুলাই','আগস্ট','সেপ্টেম্বর','অক্টোবর','নভেম্বর','ডিসেম্বর'];
+
+  window.showSavingsFull = function() {
+    document.querySelectorAll('div[style*="position:fixed"]').forEach(e => e.remove());
+    const users = getUsers().filter(u => u.role !== 'admin');
+    const savings = getSavings();
+    const now = new Date();
+    const curMonth = BANGLA_MONTHS[now.getMonth()];
+    const curYear = now.getFullYear();
+
+    const totalAll = savings.reduce((s, x) => s + Number(x.amount || 0), 0);
+    const totalThisMonth = savings.filter(x => x.month === curMonth && x.year === curYear).reduce((s, x) => s + Number(x.amount || 0), 0);
+    const contributorIds = new Set(savings.map(x => x.memberId));
+
+    // প্রতি সদস্যের সর্বমোট সঞ্চয় হিসাব
+    const perMember = {};
+    savings.forEach(x => {
+      if (!perMember[x.memberId]) perMember[x.memberId] = { name: x.memberName, total: 0, count: 0 };
+      perMember[x.memberId].total += Number(x.amount || 0);
+      perMember[x.memberId].count += 1;
+    });
+    const summaryRows = Object.keys(perMember).length ? Object.keys(perMember).map(mid => `
+      <tr style="border-bottom:1px solid #f0f0f0;">
+        <td style="padding:0.7rem 1rem;font-weight:600;color:#0d8a6f;">${perMember[mid].name}</td>
+        <td style="padding:0.7rem 1rem;color:#333;font-weight:700;">৳${perMember[mid].total.toLocaleString('bn-BD')}</td>
+        <td style="padding:0.7rem 1rem;color:#888;font-size:0.85rem;">${perMember[mid].count}টি এন্ট্রি</td>
+      </tr>`).join('') : `<tr><td colspan="3" style="text-align:center;padding:1.5rem;color:#aaa;">এখনো কোনো সঞ্চয় জমা হয়নি</td></tr>`;
+
+    // সব এন্ট্রি (নতুন আগে)
+    const sortedEntries = [...savings].sort((a, b) => (b.id||0) - (a.id||0));
+    const entryRows = sortedEntries.length ? sortedEntries.map(x => `
+      <div id="sav-row-${x.id}" style="display:flex;align-items:center;gap:0.75rem;border:1px solid #eee;border-radius:10px;padding:0.65rem 0.85rem;margin-bottom:0.6rem;">
+        <div style="flex:1;min-width:0;">
+          <div style="font-weight:600;color:#1B4F72;font-size:0.9rem;">${x.memberName}</div>
+          <div style="font-size:0.78rem;color:#888;">${x.month} ${x.year}${x.note ? ' • ' + x.note : ''}</div>
+        </div>
+        <div style="font-weight:700;color:#0d8a6f;font-size:1rem;flex-shrink:0;">৳${Number(x.amount||0).toLocaleString('bn-BD')}</div>
+        <div id="sav-actions-${x.id}" style="flex-shrink:0;">
+          <button onclick="askDeleteSaving(${x.id})" style="background:#fee;color:#c00;border:1px solid #fcc;padding:0.3rem 0.6rem;border-radius:6px;cursor:pointer;font-size:0.75rem;font-family:inherit;">🗑️</button>
+        </div>
+      </div>`).join('') : `<div style="text-align:center;padding:1.5rem;color:#aaa;">কোনো এন্ট্রি নেই</div>`;
+
+    const monthOptions = BANGLA_MONTHS.map(m => `<option value="${m}" ${m===curMonth?'selected':''}>${m}</option>`).join('');
+    const yearOptions = [curYear-1, curYear, curYear+1].map(y => `<option value="${y}" ${y===curYear?'selected':''}>${y}</option>`).join('');
+    const memberOptions = users.length ? users.map(u => `<option value="${u.id}">${u.name}</option>`).join('') : `<option value="">কোনো সদস্য নেই</option>`;
+
+    const m = createModal(`
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.25rem;">
+        <div>
+          <h2 style="font-family:Noto Serif Bengali,serif;color:#1B4F72;font-size:1.25rem;">💰 সঞ্চয় ব্যবস্থাপনা</h2>
+          <p style="color:#888;font-size:0.8rem;">সবার মাসিক সঞ্চয়ের হিসাব এক জায়গায়</p>
+        </div>
+        <button onclick="renderAdminPanel()" style="background:#f5f5f5;color:#555;border:1px solid #ddd;padding:0.4rem 0.9rem;border-radius:8px;cursor:pointer;font-size:0.85rem;">← ফিরুন</button>
+      </div>
+
+      <!-- STATS -->
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:0.75rem;margin-bottom:1.25rem;">
+        <div style="background:linear-gradient(145deg,#e6f7f2,#d0f0e6);border-radius:12px;padding:0.9rem;text-align:center;border:1px solid #b8e6d5;">
+          <div style="font-size:1.3rem;font-weight:800;color:#0d8a6f;">৳${totalAll.toLocaleString('bn-BD')}</div>
+          <div style="font-size:0.72rem;color:#0d8a6f;margin-top:2px;">সর্বমোট সঞ্চয়</div>
+        </div>
+        <div style="background:linear-gradient(145deg,#fff8e6,#ffefc4);border-radius:12px;padding:0.9rem;text-align:center;border:1px solid #f5deA0;">
+          <div style="font-size:1.3rem;font-weight:800;color:#b8860b;">৳${totalThisMonth.toLocaleString('bn-BD')}</div>
+          <div style="font-size:0.72rem;color:#8a6a1f;margin-top:2px;">${curMonth} মাসের সঞ্চয়</div>
+        </div>
+        <div style="background:linear-gradient(145deg,#eaf4ff,#d3e9ff);border-radius:12px;padding:0.9rem;text-align:center;border:1px solid #b0d4f5;">
+          <div style="font-size:1.3rem;font-weight:800;color:#1B4F72;">${contributorIds.size}</div>
+          <div style="font-size:0.72rem;color:#2c5a7a;margin-top:2px;">সঞ্চয়কারী সদস্য</div>
+        </div>
+      </div>
+
+      <!-- ADD NEW SAVING -->
+      <div style="background:#eafaf5;border:1px solid #c2ede0;border-radius:10px;padding:1rem;margin-bottom:1.25rem;">
+        <h3 style="font-size:0.95rem;color:#0d8a6f;margin-bottom:0.75rem;font-family:Noto Serif Bengali,serif;">➕ নতুন সঞ্চয় যোগ করুন</h3>
+        <div id="sav-add-err" style="display:none;background:#fee;color:#c00;padding:0.5rem 0.9rem;border-radius:8px;font-size:0.85rem;margin-bottom:0.75rem;"></div>
+        <div style="margin-bottom:0.7rem;">
+          <label style="display:block;font-size:0.85rem;color:#666;margin-bottom:0.3rem;font-weight:500;">সদস্য</label>
+          <select id="sav-member" style="width:100%;padding:0.55rem 0.8rem;border:1px solid #c2ede0;border-radius:8px;font-size:0.92rem;outline:none;font-family:inherit;background:#fff;">${memberOptions}</select>
+        </div>
+        <div style="display:flex;gap:0.6rem;margin-bottom:0.7rem;">
+          <div style="flex:1;">
+            <label style="display:block;font-size:0.85rem;color:#666;margin-bottom:0.3rem;font-weight:500;">মাস</label>
+            <select id="sav-month" style="width:100%;padding:0.55rem 0.6rem;border:1px solid #c2ede0;border-radius:8px;font-size:0.9rem;outline:none;font-family:inherit;background:#fff;">${monthOptions}</select>
+          </div>
+          <div style="width:100px;">
+            <label style="display:block;font-size:0.85rem;color:#666;margin-bottom:0.3rem;font-weight:500;">বছর</label>
+            <select id="sav-year" style="width:100%;padding:0.55rem 0.6rem;border:1px solid #c2ede0;border-radius:8px;font-size:0.9rem;outline:none;font-family:inherit;background:#fff;">${yearOptions}</select>
+          </div>
+        </div>
+        <div style="margin-bottom:0.7rem;">
+          <label style="display:block;font-size:0.85rem;color:#666;margin-bottom:0.3rem;font-weight:500;">পরিমাণ (৳)</label>
+          <input id="sav-amount" type="number" min="0" placeholder="যেমনঃ ৫০০" style="width:100%;padding:0.55rem 0.8rem;border:1px solid #c2ede0;border-radius:8px;font-size:0.92rem;outline:none;font-family:inherit;">
+        </div>
+        <div style="margin-bottom:0.85rem;">
+          <label style="display:block;font-size:0.85rem;color:#666;margin-bottom:0.3rem;font-weight:500;">নোট (ঐচ্ছিক)</label>
+          <input id="sav-note" type="text" placeholder="যেমনঃ হাতে জমা" style="width:100%;padding:0.55rem 0.8rem;border:1px solid #c2ede0;border-radius:8px;font-size:0.92rem;outline:none;font-family:inherit;">
+        </div>
+        <button onclick="doAddSaving()" style="width:100%;background:linear-gradient(135deg,#1fab89,#0d8a6f);color:#fff;border:none;padding:0.7rem;border-radius:8px;font-size:0.95rem;font-family:inherit;font-weight:600;cursor:pointer;">যোগ করুন ✓</button>
+      </div>
+
+      <!-- PER MEMBER SUMMARY -->
+      <h3 style="font-size:0.95rem;color:#1B4F72;margin-bottom:0.75rem;font-family:Noto Serif Bengali,serif;">📊 সদস্য অনুযায়ী সর্বমোট সঞ্চয়</h3>
+      <div style="max-height:20vh;overflow-y:auto;margin-bottom:1.25rem;border:1px solid #eee;border-radius:10px;">
+        <table style="width:100%;border-collapse:collapse;font-size:0.88rem;">
+          <thead>
+            <tr style="background:#f4fcfa;position:sticky;top:0;">
+              <th style="padding:0.6rem 1rem;text-align:left;color:#555;font-weight:600;">সদস্য</th>
+              <th style="padding:0.6rem 1rem;text-align:left;color:#555;font-weight:600;">মোট</th>
+              <th style="padding:0.6rem 1rem;text-align:left;color:#555;font-weight:600;">এন্ট্রি</th>
+            </tr>
+          </thead>
+          <tbody>${summaryRows}</tbody>
+        </table>
+      </div>
+
+      <!-- ALL ENTRIES -->
+      <h3 style="font-size:0.95rem;color:#1B4F72;margin-bottom:0.75rem;font-family:Noto Serif Bengali,serif;">🧾 সব সঞ্চয়ের বিস্তারিত তালিকা</h3>
+      <div style="max-height:35vh;overflow-y:auto;">${entryRows}</div>
+    `);
+  };
+
+  window.doAddSaving = function() {
+    const memberSelect = document.getElementById('sav-member');
+    const memberId = memberSelect.value;
+    const memberName = memberSelect.options[memberSelect.selectedIndex] ? memberSelect.options[memberSelect.selectedIndex].text : '';
+    const month = document.getElementById('sav-month').value;
+    const year = Number(document.getElementById('sav-year').value);
+    const amount = Number(document.getElementById('sav-amount').value);
+    const note = document.getElementById('sav-note').value.trim();
+    const err = document.getElementById('sav-add-err');
+
+    if (!memberId) {
+      err.style.display = 'block';
+      err.textContent = '❌ একজন সদস্য বাছাই করুন!';
+      return;
+    }
+    if (!amount || amount <= 0) {
+      err.style.display = 'block';
+      err.textContent = '❌ সঠিক পরিমাণ লিখুন!';
+      return;
+    }
+    err.style.display = 'none';
+
+    const savings = getSavings();
+    savings.push({ id: Date.now(), memberId, memberName, amount, month, year, note, date: new Date().toISOString() });
+    const ok = saveSavings(savings);
+    if (ok) {
+      showSavingsFull();
+    } else {
+      err.style.display = 'block';
+      err.textContent = '❌ সেভ করা যায়নি — স্টোরেজ পূর্ণ।';
+    }
+  };
+
+  // native confirm() এড়িয়ে ইনলাইন নিশ্চিতকরণ
+  window.askDeleteSaving = function(id) {
+    const actions = document.getElementById(`sav-actions-${id}`);
+    if (!actions) return;
+    actions.innerHTML = `
+      <div style="display:flex;gap:0.3rem;">
+        <button onclick="deleteSaving(${id})" style="background:#c00;color:#fff;border:none;padding:0.3rem 0.55rem;border-radius:6px;cursor:pointer;font-size:0.72rem;font-family:inherit;">হ্যাঁ</button>
+        <button onclick="showSavingsFull()" style="background:#f5f5f5;color:#555;border:1px solid #ddd;padding:0.3rem 0.55rem;border-radius:6px;cursor:pointer;font-size:0.72rem;font-family:inherit;">বাতিল</button>
+      </div>
+    `;
+  };
+
+  window.deleteSaving = function(id) {
+    const savings = getSavings().filter(x => x.id !== id);
+    saveSavings(savings);
+    showSavingsFull();
   };
 
   window.doLogout = function() {
