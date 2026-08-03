@@ -1519,6 +1519,7 @@
                   <th style="padding:0.75rem 1rem;text-align:left;color:#555;font-weight:600;">Username</th>
                   <th style="padding:0.75rem 1rem;text-align:left;color:#555;font-weight:600;">Password</th>
                   <th style="padding:0.75rem 1rem;text-align:left;color:#555;font-weight:600;">ধরন</th>
+                  <th style="padding:0.75rem 1rem;text-align:left;color:#555;font-weight:600;"></th>
                 </tr>
               </thead>
               <tbody>${members.filter(u=>u.hasLogin).length ? members.filter(u=>u.hasLogin).map(u => `
@@ -1534,7 +1535,8 @@
                   <td style="padding:0.85rem 1rem;color:#1B4F72;font-family:monospace;font-size:0.95rem;">${u.username}</td>
                   <td style="padding:0.85rem 1rem;color:#1B6B3A;font-family:monospace;font-weight:700;font-size:0.95rem;">${u.password||'-'}</td>
                   <td style="padding:0.85rem 1rem;"><span style="background:#e8f5ee;color:#1B6B3A;padding:0.2rem 0.7rem;border-radius:4px;font-size:0.78rem;">Sub User</span></td>
-                </tr>`).join('') : `<tr><td colspan="4" style="text-align:center;padding:3rem;color:#aaa;">এখনো কাউকে লগইন দেওয়া হয়নি</td></tr>`}
+                  <td style="padding:0.85rem 1rem;" id="cred-actions-${u.id}"><button onclick="askRemoveCredential(${u.id})" style="background:linear-gradient(135deg,#f36a5a,#e74c3c);color:#fff;border:none;padding:0.3rem 0.75rem;border-radius:6px;cursor:pointer;font-size:0.78rem;font-family:inherit;font-weight:600;">বাদ দিন</button></td>
+                </tr>`).join('') : `<tr><td colspan="5" style="text-align:center;padding:3rem;color:#aaa;">এখনো কাউকে লগইন দেওয়া হয়নি</td></tr>`}
               </tbody>
             </table>
           </div>
@@ -2068,6 +2070,17 @@
     user.password = '';
     saveUsers(users);
     renderAdminPanel();
+  };
+
+  // Username/Password তালিকা থেকে বাদ দেওয়ার ইনলাইন নিশ্চিতকরণ (লগইন বাতিল হয়, সদস্য তালিকা থেকে মুছবে না)
+  window.askRemoveCredential = function(id) {
+    const box = document.getElementById(`cred-actions-${id}`);
+    if (!box) return;
+    box.innerHTML = `
+      <span style="font-size:0.76rem;color:#c00;font-weight:600;margin-right:0.35rem;">নিশ্চিত?</span>
+      <button onclick="revokeLogin(${id})" style="background:#c00;color:#fff;border:none;padding:0.25rem 0.55rem;border-radius:6px;cursor:pointer;font-size:0.74rem;font-family:inherit;">হ্যাঁ</button>
+      <button onclick="renderAdminPanel()" style="background:#f5f5f5;color:#555;border:1px solid #ddd;padding:0.25rem 0.55rem;border-radius:6px;cursor:pointer;font-size:0.74rem;font-family:inherit;">বাতিল</button>
+    `;
   };
 
   window.askDeleteUser = function(id) {
