@@ -856,6 +856,20 @@
           <label>কেন যোগ দিতে চান?</label>
           <textarea id="mf-reason" placeholder="সংক্ষেপে জানান..."></textarea>
         </div>
+        <div class="form-group">
+          <label>আপনার ছবি</label>
+          <div style="display:flex;align-items:center;gap:0.85rem;">
+            <div id="mf-photo-preview" onclick="document.getElementById('mf-photo-input').click()" style="width:64px;height:64px;border-radius:50%;background:#eef6f0;border:2px dashed #7fb896;display:flex;align-items:center;justify-content:center;font-size:1.6rem;overflow:hidden;cursor:pointer;flex-shrink:0;">👤</div>
+            <input id="mf-photo-input" type="file" accept="image/*" style="display:none;" onchange="previewJoinPhoto(this)">
+            <button type="button" onclick="document.getElementById('mf-photo-input').click()" style="background:#eef6f0;color:#1B6B3A;border:1px solid #c8e6c9;padding:0.55rem 1rem;border-radius:8px;cursor:pointer;font-size:0.88rem;font-family:inherit;">📷 ছবি আপলোড করুন</button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>জাতীয় পরিচয়পত্র (NID)</label>
+          <div id="mf-nid-preview" onclick="document.getElementById('mf-nid-input').click()" style="width:100%;height:80px;border-radius:8px;background:#eef6f0;border:2px dashed #7fb896;display:flex;align-items:center;justify-content:center;font-size:1.6rem;overflow:hidden;cursor:pointer;margin-bottom:0.6rem;color:#7fb896;">🪪</div>
+          <input id="mf-nid-input" type="file" accept="image/*" style="display:none;" onchange="previewJoinNid(this)">
+          <button type="button" onclick="document.getElementById('mf-nid-input').click()" style="width:100%;background:#eef6f0;color:#1B6B3A;border:1px solid #c8e6c9;padding:0.55rem 1rem;border-radius:8px;cursor:pointer;font-size:0.88rem;font-family:inherit;">🪪 NID কার্ডের ছবি আপলোড করুন</button>
+        </div>
         <button class="btn-submit" onclick="submitMemberForm()">আবেদন করুন →</button>
       </div>
       <div class="join-benefits">
@@ -1037,18 +1051,45 @@
     if (changed) saveUsers(list);
     return list;
   }
-  function saveUsers(u) { localStorage.setItem(STORAGE_KEY, JSON.stringify(u)); }
+  function saveUsers(u) {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(u));
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
   function getSession() { const d = localStorage.getItem(SESSION_KEY); return d ? JSON.parse(d) : null; }
   function setSession(u) { localStorage.setItem(SESSION_KEY, JSON.stringify(u)); }
   function clearSession() { localStorage.removeItem(SESSION_KEY); }
 
   // ======== MEMBERSHIP FORM ========
+  window.previewJoinPhoto = function(input) {
+    if (!input.files || !input.files[0]) return;
+    compressImageFile(input.files[0], 320, 0.78, function(dataUrl) {
+      const preview = document.getElementById('mf-photo-preview');
+      preview.innerHTML = `<img src="${dataUrl}" style="width:100%;height:100%;object-fit:cover;">`;
+      preview.dataset.photo = dataUrl;
+    });
+  };
+
+  window.previewJoinNid = function(input) {
+    if (!input.files || !input.files[0]) return;
+    compressImageFile(input.files[0], 800, 0.72, function(dataUrl) {
+      const preview = document.getElementById('mf-nid-preview');
+      preview.innerHTML = `<img src="${dataUrl}" style="width:100%;height:100%;object-fit:contain;background:#f8f8f8;">`;
+      preview.dataset.nid = dataUrl;
+    });
+  };
+
   window.submitMemberForm = function() {
     const name  = document.getElementById('mf-name').value.trim();
     const phone = document.getElementById('mf-phone').value.trim();
     const email = document.getElementById('mf-email').value.trim();
     const job   = document.getElementById('mf-job').value;
     const reason= document.getElementById('mf-reason').value.trim();
+    const photo = (document.getElementById('mf-photo-preview').dataset.photo) || '';
+    const nid   = (document.getElementById('mf-nid-preview').dataset.nid) || '';
     const msg   = document.getElementById('member-msg');
 
     if (!name)  { msg.style.cssText='display:block;background:#fee;color:#c00;padding:0.75rem 1rem;border-radius:8px;margin-bottom:1rem;'; msg.textContent='❌ পূর্ণ নাম দিন!'; return; }
@@ -1057,8 +1098,10 @@
     // Save as pending application only (NO auto login)
     const APP_KEY = 'taruner_alo_applications';
     const apps = JSON.parse(localStorage.getItem(APP_KEY)||'[]');
-    apps.unshift({ id: Date.now(), name, phone, email, job, reason, date: new Date().toLocaleDateString('bn-BD'), status: 'pending' });
-    localStorage.setItem(APP_KEY, JSON.stringify(apps));
+    apps.unshift({ id: Date.now(), name, phone, email, job, reason, photo, nid, date: new Date().toLocaleDateString('bn-BD'), status: 'pending' });
+    let saveOk = true;
+    try { localStorage.setItem(APP_KEY, JSON.stringify(apps)); } catch (e) { saveOk = false; }
+    if (!saveOk) { msg.style.cssText='display:block;background:#fee;color:#c00;padding:0.75rem 1rem;border-radius:8px;margin-bottom:1rem;'; msg.textContent='❌ স্টোরেজ পূর্ণ, আবেদন সেভ করা যায়নি।'; return; }
 
     // Clear form
     document.getElementById('mf-name').value = '';
@@ -1066,6 +1109,12 @@
     document.getElementById('mf-email').value = '';
     document.getElementById('mf-job').selectedIndex = 0;
     document.getElementById('mf-reason').value = '';
+    const photoPreview = document.getElementById('mf-photo-preview');
+    photoPreview.innerHTML = '👤';
+    delete photoPreview.dataset.photo;
+    const nidPreview = document.getElementById('mf-nid-preview');
+    nidPreview.innerHTML = '🪪';
+    delete nidPreview.dataset.nid;
     msg.style.display = 'none';
 
     // Success modal - no login info shown
@@ -1437,7 +1486,7 @@
               </thead>
               <tbody id="members-table-body">${members.length ? members.map(u => `
                 <tr data-member-name="${(u.name||'').toLowerCase()}" data-member-phone="${(u.phone||'').toLowerCase()}" style="border-bottom:1px solid #f0f0f0;">
-                  <td style="padding:0.85rem 1rem;font-weight:600;color:#1B4F72;">${u.name}</td>
+                  <td style="padding:0.85rem 1rem;font-weight:600;color:#1B4F72;">${u.name}${u.nid ? `<div style="font-weight:400;font-size:0.72rem;color:#b8860b;margin-top:2px;">🪪 NID যুক্ত</div>` : ''}</td>
                   <td style="padding:0.85rem 1rem;color:#666;">${u.phone||'-'}</td>
                   <td style="padding:0.85rem 1rem;color:#888;font-size:0.85rem;">${u.joined||'-'}</td>
                   <td style="padding:0.85rem 1rem;" id="login-status-${u.id}">
@@ -1445,7 +1494,10 @@
                       ? `<span style="background:#e8f5ee;color:#1B6B3A;padding:0.25rem 0.7rem;border-radius:20px;font-size:0.78rem;font-weight:600;margin-right:0.4rem;">🔓 সক্রিয়</span><button onclick="askRevokeLogin(${u.id})" style="background:#fff3e0;color:#b8860b;border:1px solid #f0d090;padding:0.25rem 0.6rem;border-radius:6px;cursor:pointer;font-size:0.76rem;font-family:inherit;">বাতিল</button>`
                       : `<span style="background:#f5f5f5;color:#999;padding:0.25rem 0.7rem;border-radius:20px;font-size:0.78rem;">🔒 নেই</span>`}
                   </td>
-                  <td style="padding:0.85rem 1rem;"><button onclick="askDeleteUser(${u.id})" style="background:linear-gradient(135deg,#f36a5a,#e74c3c);color:#fff;border:none;padding:0.35rem 0.85rem;border-radius:8px;cursor:pointer;font-size:0.82rem;font-family:inherit;font-weight:600;box-shadow:0 2px 6px rgba(231,76,60,0.3);">বাদ দিন</button></td>
+                  <td style="padding:0.85rem 1rem;white-space:nowrap;">
+                    <button onclick="showEditMemberModal(${u.id})" style="background:linear-gradient(135deg,#4f9ce8,#2575fc);color:#fff;border:none;padding:0.35rem 0.75rem;border-radius:8px;cursor:pointer;font-size:0.82rem;font-family:inherit;font-weight:600;box-shadow:0 2px 6px rgba(37,117,252,0.3);margin-right:0.4rem;">✏️ প্রোফাইল</button>
+                    <button onclick="askDeleteUser(${u.id})" style="background:linear-gradient(135deg,#f36a5a,#e74c3c);color:#fff;border:none;padding:0.35rem 0.85rem;border-radius:8px;cursor:pointer;font-size:0.82rem;font-family:inherit;font-weight:600;box-shadow:0 2px 6px rgba(231,76,60,0.3);">বাদ দিন</button>
+                  </td>
                 </tr>`).join('') : `<tr><td colspan="5" style="text-align:center;padding:3rem;color:#aaa;">কোনো সদস্য নেই</td></tr>`}
               </tbody>
             </table>
@@ -1591,6 +1643,98 @@
     reader.readAsDataURL(input.files[0]);
   };
 
+  // সদস্যের প্রোফাইল (নাম/ফোন/ছবি) এডিট করার মডাল
+  window.showEditMemberModal = function(id) {
+    const users = getUsers();
+    const user = users.find(u => u.id === id);
+    if (!user) return;
+    document.querySelectorAll('#edit-member-modal').forEach(e => e.remove());
+    const overlay = document.createElement('div');
+    overlay.id = 'edit-member-modal';
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:10000;display:flex;align-items:center;justify-content:center;padding:1rem;';
+    overlay.innerHTML = `
+      <div style="background:#fff;border-radius:16px;padding:2rem;width:100%;max-width:420px;box-shadow:0 20px 60px rgba(0,0,0,0.3);max-height:90vh;overflow-y:auto;">
+        <h2 style="font-family:Noto Serif Bengali,serif;color:#1B4F72;font-size:1.2rem;margin-bottom:1.25rem;">✏️ প্রোফাইল এডিট করুন</h2>
+        <div id="em-err" style="display:none;background:#fee;color:#c00;padding:0.6rem 1rem;border-radius:8px;font-size:0.88rem;margin-bottom:1rem;"></div>
+        <div style="text-align:center;margin-bottom:1.25rem;">
+          <div id="em-preview" style="width:88px;height:88px;border-radius:50%;background:#eaf2ff;border:3px dashed #4f9ce8;margin:0 auto 0.65rem;display:flex;align-items:center;justify-content:center;font-size:2.1rem;overflow:hidden;cursor:pointer;" onclick="document.getElementById('em-photo-input').click()">
+            ${user.photo ? `<img src="${user.photo}" style="width:100%;height:100%;object-fit:cover;">` : '👤'}
+          </div>
+          <input id="em-photo-input" type="file" accept="image/*" style="display:none;" onchange="previewEditMemberPhoto(this)">
+          <button onclick="document.getElementById('em-photo-input').click()" style="background:#eaf2ff;color:#2575fc;border:1px solid #c9deff;padding:0.35rem 1rem;border-radius:8px;cursor:pointer;font-size:0.85rem;font-family:inherit;">📷 ছবি বদলান</button>
+        </div>
+        <div style="margin-bottom:1rem;">
+          <label style="display:block;font-size:0.85rem;color:#666;margin-bottom:0.35rem;font-weight:500;">পূর্ণ নাম *</label>
+          <input id="em-name" type="text" value="${(user.name||'').replace(/"/g,'&quot;')}" style="width:100%;padding:0.65rem 1rem;border:1px solid #ddeee5;border-radius:8px;font-size:0.95rem;outline:none;font-family:inherit;box-sizing:border-box;">
+        </div>
+        <div style="margin-bottom:1.5rem;">
+          <label style="display:block;font-size:0.85rem;color:#666;margin-bottom:0.35rem;font-weight:500;">ফোন নম্বর</label>
+          <input id="em-phone" type="text" value="${(user.phone||'').replace(/"/g,'&quot;')}" style="width:100%;padding:0.65rem 1rem;border:1px solid #ddeee5;border-radius:8px;font-size:0.95rem;outline:none;font-family:inherit;box-sizing:border-box;">
+        </div>
+        <div style="background:#fffaf0;border:1px solid #f5e3c2;border-radius:10px;padding:0.9rem;margin-bottom:1.5rem;">
+          <div style="font-size:0.8rem;color:#b8860b;font-weight:600;margin-bottom:0.6rem;">🪪 জাতীয় পরিচয়পত্র (NID)</div>
+          <div id="em-nid-preview" style="width:100%;height:${user.nid?'140px':'90px'};border-radius:8px;background:#fff;border:2px dashed #e0c088;margin-bottom:0.6rem;display:flex;align-items:center;justify-content:center;font-size:1.8rem;overflow:hidden;cursor:pointer;color:#c9a35f;" onclick="document.getElementById('em-nid-input').click()">
+            ${user.nid ? `<img src="${user.nid}" style="width:100%;height:100%;object-fit:contain;background:#f8f8f8;">` : '🪪'}
+          </div>
+          <input id="em-nid-input" type="file" accept="image/*" style="display:none;" onchange="previewEditMemberNid(this)">
+          <button onclick="document.getElementById('em-nid-input').click()" style="width:100%;background:#fff3e0;color:#b8860b;border:1px solid #f0d090;padding:0.4rem 1rem;border-radius:8px;cursor:pointer;font-size:0.83rem;font-family:inherit;font-weight:600;">${user.nid ? '🔄 NID পরিবর্তন করুন' : '📤 NID কার্ডের ছবি আপলোড করুন'}</button>
+        </div>
+        <div style="display:flex;gap:0.75rem;">
+          <button onclick="document.getElementById('edit-member-modal').remove()" style="flex:1;background:#f5f5f5;color:#555;border:1px solid #ddd;padding:0.75rem;border-radius:8px;cursor:pointer;font-family:inherit;">বাতিল</button>
+          <button onclick="doSaveMemberEdit(${id})" style="flex:2;background:linear-gradient(135deg,#4f9ce8,#2575fc);color:#fff;border:none;padding:0.75rem;border-radius:8px;font-size:1rem;font-family:inherit;font-weight:600;cursor:pointer;">💾 সেভ করুন</button>
+        </div>
+      </div>`;
+    overlay.addEventListener('click', e => { if(e.target===overlay) overlay.remove(); });
+    document.body.appendChild(overlay);
+  };
+
+  window.previewEditMemberPhoto = function(input) {
+    if (!input.files || !input.files[0]) return;
+    compressImageFile(input.files[0], 320, 0.78, function(dataUrl) {
+      const preview = document.getElementById('em-preview');
+      preview.innerHTML = `<img src="${dataUrl}" style="width:100%;height:100%;object-fit:cover;">`;
+      preview.dataset.photo = dataUrl;
+    });
+  };
+
+  window.previewEditMemberNid = function(input) {
+    if (!input.files || !input.files[0]) return;
+    compressImageFile(input.files[0], 800, 0.72, function(dataUrl) {
+      const preview = document.getElementById('em-nid-preview');
+      preview.style.height = '140px';
+      preview.innerHTML = `<img src="${dataUrl}" style="width:100%;height:100%;object-fit:contain;background:#f8f8f8;">`;
+      preview.dataset.nid = dataUrl;
+      const btn = preview.nextElementSibling.nextElementSibling;
+      if (btn) btn.textContent = '🔄 NID পরিবর্তন করুন';
+    });
+  };
+
+  window.doSaveMemberEdit = function(id) {
+    const name = document.getElementById('em-name').value.trim();
+    const phone = document.getElementById('em-phone').value.trim();
+    const preview = document.getElementById('em-preview');
+    const newPhoto = preview.dataset.photo;
+    const nidPreview = document.getElementById('em-nid-preview');
+    const newNid = nidPreview ? nidPreview.dataset.nid : null;
+    const err = document.getElementById('em-err');
+    if (!name) {
+      err.style.display = 'block';
+      err.textContent = '❌ নাম দিন!';
+      return;
+    }
+    const users = getUsers();
+    const user = users.find(u => u.id === id);
+    if (!user) return;
+    user.name = name;
+    user.phone = phone;
+    if (newPhoto) user.photo = newPhoto;
+    if (newNid) user.nid = newNid;
+    const ok = saveUsers(users);
+    document.getElementById('edit-member-modal').remove();
+    renderAdminPanel();
+    if (!ok) alert('❌ NID/ছবি সেভ করা যায়নি — স্টোরেজ পূর্ণ। পুরনো কিছু ছবি মুছে আবার চেষ্টা করুন।');
+  };
+
   window.doAddUserFull = function() {
     const selectEl = document.getElementById('au2-select-member');
     const selectedId = selectEl ? selectEl.value : '';
@@ -1635,13 +1779,19 @@
     const rows = apps.length ? apps.map(a => `
       <div style="background:#fff;border:1px solid ${a.status==='pending'?'#f0c040':'#ddd'};border-radius:10px;padding:1.25rem;margin-bottom:0.75rem;">
         <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:0.5rem;">
-          <div>
-            <strong style="color:#1B4F72;">${a.name}</strong>
-            ${a.status==='pending' ? '<span style="background:#fff8e1;color:#b8860b;font-size:0.72rem;padding:0.2rem 0.6rem;border-radius:4px;margin-left:6px;border:1px solid #f0c040;">নতুন</span>' : '<span style="background:#e8f5ee;color:#1B6B3A;font-size:0.72rem;padding:0.2rem 0.6rem;border-radius:4px;margin-left:6px;">অনুমোদিত</span>'}
-            <div style="font-size:0.8rem;color:#888;margin-top:3px;">📞 ${a.phone} • ${a.date}</div>
-            ${a.email ? `<div style="font-size:0.8rem;color:#888;">✉️ ${a.email}</div>` : ''}
-            ${a.job && a.job!=='পেশা নির্বাচন করুন' ? `<div style="font-size:0.8rem;color:#888;">💼 ${a.job}</div>` : ''}
-            ${a.reason ? `<div style="font-size:0.85rem;color:#444;margin-top:6px;">"${a.reason}"</div>` : ''}
+          <div style="display:flex;gap:0.85rem;">
+            ${(a.photo || a.nid) ? `<div style="display:flex;gap:0.4rem;flex-shrink:0;">
+              ${a.photo ? `<div style="width:52px;height:52px;border-radius:50%;overflow:hidden;border:2px solid #e8f5ee;"><img src="${a.photo}" style="width:100%;height:100%;object-fit:cover;"></div>` : ''}
+              ${a.nid ? `<div onclick="window.open('${a.nid}','_blank')" style="width:70px;height:52px;border-radius:6px;overflow:hidden;border:2px solid #fff3e0;cursor:pointer;" title="NID দেখুন"><img src="${a.nid}" style="width:100%;height:100%;object-fit:cover;"></div>` : ''}
+            </div>` : ''}
+            <div>
+              <strong style="color:#1B4F72;">${a.name}</strong>
+              ${a.status==='pending' ? '<span style="background:#fff8e1;color:#b8860b;font-size:0.72rem;padding:0.2rem 0.6rem;border-radius:4px;margin-left:6px;border:1px solid #f0c040;">নতুন</span>' : '<span style="background:#e8f5ee;color:#1B6B3A;font-size:0.72rem;padding:0.2rem 0.6rem;border-radius:4px;margin-left:6px;">অনুমোদিত</span>'}
+              <div style="font-size:0.8rem;color:#888;margin-top:3px;">📞 ${a.phone} • ${a.date}</div>
+              ${a.email ? `<div style="font-size:0.8rem;color:#888;">✉️ ${a.email}</div>` : ''}
+              ${a.job && a.job!=='পেশা নির্বাচন করুন' ? `<div style="font-size:0.8rem;color:#888;">💼 ${a.job}</div>` : ''}
+              ${a.reason ? `<div style="font-size:0.85rem;color:#444;margin-top:6px;">"${a.reason}"</div>` : ''}
+            </div>
           </div>
           <div id="app-actions-${a.id}" style="display:flex;gap:0.5rem;flex-wrap:wrap;align-items:center;">
             ${a.status==='pending' ? `<button onclick="approveApp(${a.id})" style="background:#e8f5ee;color:#1B6B3A;border:1px solid #c8e6c9;padding:0.3rem 0.75rem;border-radius:6px;cursor:pointer;font-size:0.82rem;font-family:inherit;">✓ অনুমোদন</button>` : ''}
@@ -1729,13 +1879,13 @@
       err.textContent = '❌ এই ইউজারনেম আগেই আছে!';
       return;
     }
-    const hasLogin = !!(username && password);
-    users.push({ id: Date.now(), name, username: hasLogin?username:'', password: hasLogin?password:'', hasLogin, role: 'sub', phone, photo: '', joined: new Date().toLocaleDateString('bn-BD') });
-    saveUsers(users);
-
     const APP_KEY = 'taruner_alo_applications';
     const apps = JSON.parse(localStorage.getItem(APP_KEY)||'[]');
     const app = apps.find(a => a.id === id);
+    const hasLogin = !!(username && password);
+    users.push({ id: Date.now(), name, username: hasLogin?username:'', password: hasLogin?password:'', hasLogin, role: 'sub', phone, photo: (app&&app.photo)||'', nid: (app&&app.nid)||'', joined: new Date().toLocaleDateString('bn-BD') });
+    saveUsers(users);
+
     if (app) app.status = 'approved';
     localStorage.setItem(APP_KEY, JSON.stringify(apps));
 
@@ -2575,6 +2725,20 @@
       }
     }
     if (comChanged) { saveCommittee(comMembers); renderCommittee(); }
+
+    let userChanged = false;
+    const userList = getUsers();
+    for (const u of userList) {
+      if (u.photo && u.photo.length > THRESHOLD) {
+        u.photo = await compressDataUrl(u.photo, 320, 0.75);
+        userChanged = true;
+      }
+      if (u.nid && u.nid.length > THRESHOLD * 2) {
+        u.nid = await compressDataUrl(u.nid, 800, 0.68);
+        userChanged = true;
+      }
+    }
+    if (userChanged) { saveUsers(userList); }
   }
 
   updateNavBtn();
