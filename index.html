@@ -1017,12 +1017,25 @@
 
   function getUsers() {
     const d = localStorage.getItem(STORAGE_KEY);
-    if (d) return JSON.parse(d);
-    const defaults = [
-      { id: 1, name: 'মোঃ মাহফুজ', username: 'admin', password: 'admin123', role: 'admin', phone: '018741-65501', joined: '২০২৬' }
-    ];
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(defaults));
-    return defaults;
+    let list;
+    if (d) {
+      list = JSON.parse(d);
+    } else {
+      list = [
+        { id: 1, name: 'মোঃ মাহফুজ', username: 'admin', password: 'admin123', role: 'admin', phone: '018741-65501', joined: '২০২৬', hasLogin: true }
+      ];
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+    }
+    // পুরনো ডেটার সাথে সামঞ্জস্য রাখতে hasLogin ফিল্ড না থাকলে যোগ করা হয়
+    let changed = false;
+    list.forEach(u => {
+      if (u.hasLogin === undefined) {
+        u.hasLogin = u.role === 'admin' ? true : !!(u.username && u.password);
+        changed = true;
+      }
+    });
+    if (changed) saveUsers(list);
+    return list;
   }
   function saveUsers(u) { localStorage.setItem(STORAGE_KEY, JSON.stringify(u)); }
   function getSession() { const d = localStorage.getItem(SESSION_KEY); return d ? JSON.parse(d) : null; }
@@ -1259,21 +1272,21 @@
   // LOGIN MODAL
   function showLoginModal() {
     const m = createModal(`
-      <div style="text-align:center;margin-bottom:1.5rem;">
-        <div style="width:56px;height:56px;background:#e8f5ee;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.6rem;margin:0 auto 0.75rem;">🔐</div>
-        <h2 style="font-family:Noto Serif Bengali,serif;color:#1B4F72;font-size:1.4rem;">লগইন করুন</h2>
-        <p style="color:#888;font-size:0.85rem;">তারুণের আলো সদস্য পোর্টাল</p>
+      <div style="text-align:center;margin-bottom:1.75rem;">
+        <div style="width:68px;height:68px;background:linear-gradient(135deg,#7b2ff7,#2575fc);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.9rem;margin:0 auto 1rem;box-shadow:0 8px 20px rgba(101,47,247,0.35);">🔐</div>
+        <h2 style="font-family:Noto Serif Bengali,serif;font-weight:800;font-size:1.65rem;margin-bottom:0.4rem;background:linear-gradient(135deg,#7b2ff7,#2575fc);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:#5a1fc7;">লগইন করুন</h2>
+        <span style="display:inline-block;background:linear-gradient(135deg,#f3ecff,#e6f0ff);color:#6a11cb;padding:0.3rem 1rem;border-radius:20px;font-size:0.85rem;font-weight:600;border:1px solid #e0d0fa;">✨ তারুণের আলো সদস্য পোর্টাল</span>
       </div>
       <div id="login-err" style="display:none;background:#fee;color:#c00;padding:0.6rem 1rem;border-radius:8px;font-size:0.88rem;margin-bottom:1rem;"></div>
       <div style="margin-bottom:1rem;">
-        <label style="display:block;font-size:0.85rem;color:#666;margin-bottom:0.35rem;font-weight:500;">ইউজারনেম</label>
-        <input id="li-user" type="text" placeholder="username" style="width:100%;padding:0.65rem 1rem;border:1px solid #ddeee5;border-radius:8px;font-size:0.95rem;outline:none;font-family:inherit;">
+        <label style="display:block;font-size:0.85rem;color:#666;margin-bottom:0.35rem;font-weight:600;">👤 ইউজারনেম</label>
+        <input id="li-user" type="text" placeholder="username" style="width:100%;padding:0.75rem 1rem;border:2px solid #eee5fc;border-radius:10px;font-size:0.95rem;outline:none;font-family:inherit;box-sizing:border-box;">
       </div>
-      <div style="margin-bottom:1.5rem;">
-        <label style="display:block;font-size:0.85rem;color:#666;margin-bottom:0.35rem;font-weight:500;">পাসওয়ার্ড</label>
-        <input id="li-pass" type="password" placeholder="••••••••" style="width:100%;padding:0.65rem 1rem;border:1px solid #ddeee5;border-radius:8px;font-size:0.95rem;outline:none;font-family:inherit;">
+      <div style="margin-bottom:1.75rem;">
+        <label style="display:block;font-size:0.85rem;color:#666;margin-bottom:0.35rem;font-weight:600;">🔒 পাসওয়ার্ড</label>
+        <input id="li-pass" type="password" placeholder="••••••••" style="width:100%;padding:0.75rem 1rem;border:2px solid #eee5fc;border-radius:10px;font-size:0.95rem;outline:none;font-family:inherit;box-sizing:border-box;">
       </div>
-      <button onclick="doLogin()" style="width:100%;background:#1B6B3A;color:#fff;border:none;padding:0.85rem;border-radius:8px;font-size:1rem;font-family:inherit;font-weight:600;cursor:pointer;">লগইন করুন →</button>
+      <button onclick="doLogin()" style="width:100%;background:linear-gradient(135deg,#7b2ff7,#2575fc);color:#fff;border:none;padding:0.95rem;border-radius:10px;font-size:1.05rem;font-family:inherit;font-weight:700;cursor:pointer;box-shadow:0 6px 18px rgba(101,47,247,0.35);letter-spacing:0.3px;">লগইন করুন →</button>
     `);
     document.getElementById('li-pass').addEventListener('keydown', e => { if(e.key==='Enter') doLogin(); });
   }
@@ -1282,7 +1295,7 @@
     const u = document.getElementById('li-user').value.trim();
     const p = document.getElementById('li-pass').value.trim();
     const users = getUsers();
-    const found = users.find(x => x.username === u && x.password === p);
+    const found = users.find(x => x.username === u && x.password === p && (x.role === 'admin' || x.hasLogin));
     if (!found) {
       const err = document.getElementById('login-err');
       err.style.display = 'block';
@@ -1308,6 +1321,26 @@
   function showAdminPanel() {
     renderAdminPanel();
   }
+
+  // সদস্যদের তালিকায় নাম/ফোন দিয়ে সার্চ করার ফাংশন
+  window.filterMembersTable = function(query) {
+    const q = query.trim().toLowerCase();
+    const tbody = document.getElementById('members-table-body');
+    if (!tbody) return;
+    const rows = tbody.querySelectorAll('tr[data-member-name]');
+    let visibleCount = 0;
+    rows.forEach(row => {
+      const name = row.getAttribute('data-member-name') || '';
+      const phone = row.getAttribute('data-member-phone') || '';
+      const match = !q || name.includes(q) || phone.includes(q);
+      row.style.display = match ? '' : 'none';
+      if (match) visibleCount++;
+    });
+    const emptyMsg = document.getElementById('member-search-empty');
+    if (emptyMsg) emptyMsg.style.display = (q && visibleCount === 0) ? 'block' : 'none';
+    const badge = document.getElementById('member-count-badge');
+    if (badge) badge.textContent = q ? `${visibleCount}টি মিলেছে` : `${rows.length} জন সদস্য`;
+  };
 
   function renderAdminPanel() {
     document.querySelectorAll('#admin-fullpage').forEach(e => e.remove());
@@ -1383,7 +1416,13 @@
         <div style="background:#fff;border-radius:14px;border:1px solid #ddeee5;box-shadow:0 4px 16px rgba(0,0,0,0.06);overflow:hidden;margin-bottom:1.5rem;">
           <div style="padding:1.1rem 1.5rem;border-bottom:1px solid #f0f0f0;display:flex;justify-content:space-between;align-items:center;background:linear-gradient(135deg,#e8f8ee,#f8fdf9);">
             <h3 style="font-family:Noto Serif Bengali,serif;color:#1B6B3A;font-size:1.1rem;margin:0;">👥 সদস্যদের তালিকা</h3>
-            <span style="font-size:0.8rem;color:#fff;background:#1B6B3A;padding:0.2rem 0.7rem;border-radius:20px;font-weight:600;">${members.length} জন সদস্য</span>
+            <span id="member-count-badge" style="font-size:0.8rem;color:#fff;background:#1B6B3A;padding:0.2rem 0.7rem;border-radius:20px;font-weight:600;">${members.length} জন সদস্য</span>
+          </div>
+          <div style="padding:1rem 1.5rem 0.5rem;">
+            <div style="position:relative;">
+              <span style="position:absolute;left:0.9rem;top:50%;transform:translateY(-50%);color:#999;font-size:0.95rem;">🔍</span>
+              <input id="member-search" type="text" placeholder="নাম দিয়ে সদস্য খুঁজুন..." oninput="filterMembersTable(this.value)" style="width:100%;padding:0.65rem 1rem 0.65rem 2.3rem;border:1px solid #ddeee5;border-radius:10px;font-size:0.92rem;outline:none;font-family:inherit;box-sizing:border-box;">
+            </div>
           </div>
           <div style="overflow-x:auto;">
             <table style="width:100%;border-collapse:collapse;font-size:0.9rem;">
@@ -1392,26 +1431,33 @@
                   <th style="padding:0.75rem 1rem;text-align:left;color:#555;font-weight:600;">নাম</th>
                   <th style="padding:0.75rem 1rem;text-align:left;color:#555;font-weight:600;">ফোন</th>
                   <th style="padding:0.75rem 1rem;text-align:left;color:#555;font-weight:600;">যোগ দিয়েছেন</th>
+                  <th style="padding:0.75rem 1rem;text-align:left;color:#555;font-weight:600;">লগইন</th>
                   <th style="padding:0.75rem 1rem;text-align:left;color:#555;font-weight:600;"></th>
                 </tr>
               </thead>
-              <tbody>${members.length ? members.map(u => `
-                <tr style="border-bottom:1px solid #f0f0f0;">
+              <tbody id="members-table-body">${members.length ? members.map(u => `
+                <tr data-member-name="${(u.name||'').toLowerCase()}" data-member-phone="${(u.phone||'').toLowerCase()}" style="border-bottom:1px solid #f0f0f0;">
                   <td style="padding:0.85rem 1rem;font-weight:600;color:#1B4F72;">${u.name}</td>
                   <td style="padding:0.85rem 1rem;color:#666;">${u.phone||'-'}</td>
                   <td style="padding:0.85rem 1rem;color:#888;font-size:0.85rem;">${u.joined||'-'}</td>
-                  <td style="padding:0.85rem 1rem;"><button onclick="deleteUser(${u.id})" style="background:linear-gradient(135deg,#f36a5a,#e74c3c);color:#fff;border:none;padding:0.35rem 0.85rem;border-radius:8px;cursor:pointer;font-size:0.82rem;font-family:inherit;font-weight:600;box-shadow:0 2px 6px rgba(231,76,60,0.3);">বাদ দিন</button></td>
-                </tr>`).join('') : `<tr><td colspan="4" style="text-align:center;padding:3rem;color:#aaa;">কোনো সদস্য নেই</td></tr>`}
+                  <td style="padding:0.85rem 1rem;" id="login-status-${u.id}">
+                    ${u.hasLogin
+                      ? `<span style="background:#e8f5ee;color:#1B6B3A;padding:0.25rem 0.7rem;border-radius:20px;font-size:0.78rem;font-weight:600;margin-right:0.4rem;">🔓 সক্রিয়</span><button onclick="askRevokeLogin(${u.id})" style="background:#fff3e0;color:#b8860b;border:1px solid #f0d090;padding:0.25rem 0.6rem;border-radius:6px;cursor:pointer;font-size:0.76rem;font-family:inherit;">বাতিল</button>`
+                      : `<span style="background:#f5f5f5;color:#999;padding:0.25rem 0.7rem;border-radius:20px;font-size:0.78rem;">🔒 নেই</span>`}
+                  </td>
+                  <td style="padding:0.85rem 1rem;"><button onclick="askDeleteUser(${u.id})" style="background:linear-gradient(135deg,#f36a5a,#e74c3c);color:#fff;border:none;padding:0.35rem 0.85rem;border-radius:8px;cursor:pointer;font-size:0.82rem;font-family:inherit;font-weight:600;box-shadow:0 2px 6px rgba(231,76,60,0.3);">বাদ দিন</button></td>
+                </tr>`).join('') : `<tr><td colspan="5" style="text-align:center;padding:3rem;color:#aaa;">কোনো সদস্য নেই</td></tr>`}
               </tbody>
             </table>
+            <div id="member-search-empty" style="display:none;text-align:center;padding:2.5rem;color:#aaa;">🔍 এই নামে কোনো সদস্য পাওয়া যায়নি</div>
           </div>
         </div>
 
         <!-- USERNAME / LOGIN TABLE -->
         <div style="background:#fff;border-radius:14px;border:1px solid #d0e8f7;box-shadow:0 4px 16px rgba(0,0,0,0.06);overflow:hidden;">
           <div style="padding:1.1rem 1.5rem;border-bottom:1px solid #e8f4fc;background:linear-gradient(135deg,#eaf4ff,#f0f8ff);display:flex;justify-content:space-between;align-items:center;">
-            <h3 style="font-family:Noto Serif Bengali,serif;color:#1B4F72;font-size:1.1rem;margin:0;">🔐 Username ও Password তালিকা</h3>
-            <span style="font-size:0.8rem;color:#fff;background:#1B4F72;padding:0.2rem 0.7rem;border-radius:20px;font-weight:600;">${members.length} জন</span>
+            <h3 style="font-family:Noto Serif Bengali,serif;color:#1B4F72;font-size:1.1rem;margin:0;">🔐 Username ও Password তালিকা (শুধু যাদের লগইন দেওয়া হয়েছে)</h3>
+            <span style="font-size:0.8rem;color:#fff;background:#1B4F72;padding:0.2rem 0.7rem;border-radius:20px;font-weight:600;">${members.filter(u=>u.hasLogin).length} জন</span>
           </div>
           <div style="overflow-x:auto;">
             <table style="width:100%;border-collapse:collapse;font-size:0.9rem;">
@@ -1423,7 +1469,7 @@
                   <th style="padding:0.75rem 1rem;text-align:left;color:#555;font-weight:600;">ধরন</th>
                 </tr>
               </thead>
-              <tbody>${members.length ? members.map(u => `
+              <tbody>${members.filter(u=>u.hasLogin).length ? members.filter(u=>u.hasLogin).map(u => `
                 <tr style="border-bottom:1px solid #f0f0f0;">
                   <td style="padding:0.85rem 1rem;">
                     <div style="display:flex;align-items:center;gap:0.75rem;">
@@ -1436,7 +1482,7 @@
                   <td style="padding:0.85rem 1rem;color:#1B4F72;font-family:monospace;font-size:0.95rem;">${u.username}</td>
                   <td style="padding:0.85rem 1rem;color:#1B6B3A;font-family:monospace;font-weight:700;font-size:0.95rem;">${u.password||'-'}</td>
                   <td style="padding:0.85rem 1rem;"><span style="background:#e8f5ee;color:#1B6B3A;padding:0.2rem 0.7rem;border-radius:4px;font-size:0.78rem;">Sub User</span></td>
-                </tr>`).join('') : `<tr><td colspan="4" style="text-align:center;padding:3rem;color:#aaa;">কোনো সদস্য নেই</td></tr>`}
+                </tr>`).join('') : `<tr><td colspan="4" style="text-align:center;padding:3rem;color:#aaa;">এখনো কাউকে লগইন দেওয়া হয়নি</td></tr>`}
               </tbody>
             </table>
           </div>
@@ -1449,6 +1495,9 @@
 
   window.showAddUserFull = function() {
     document.querySelectorAll('#add-user-modal').forEach(e => e.remove());
+    const users = getUsers();
+    const noLoginMembers = users.filter(u => u.role !== 'admin' && !u.hasLogin);
+    const memberOptions = noLoginMembers.map(u => `<option value="${u.id}">${u.name}</option>`).join('');
     const overlay = document.createElement('div');
     overlay.id = 'add-user-modal';
     overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:10000;display:flex;align-items:center;justify-content:center;padding:1rem;';
@@ -1457,8 +1506,17 @@
         <h2 style="font-family:Noto Serif Bengali,serif;color:#1B4F72;font-size:1.3rem;margin-bottom:1.5rem;">➕ নতুন Sub User তৈরি</h2>
         <div id="add-err2" style="display:none;background:#fee;color:#c00;padding:0.6rem 1rem;border-radius:8px;font-size:0.88rem;margin-bottom:1rem;"></div>
 
+        <div style="margin-bottom:1.25rem;">
+          <label style="display:block;font-size:0.85rem;color:#666;margin-bottom:0.35rem;font-weight:500;">সদস্য বাছাই করুন</label>
+          <select id="au2-select-member" onchange="onSelectExistingMember(this)" style="width:100%;padding:0.65rem 1rem;border:1px solid #ddeee5;border-radius:8px;font-size:0.92rem;outline:none;font-family:inherit;background:#fff;">
+            <option value="">-- নতুন সদস্য তৈরি করুন --</option>
+            ${memberOptions}
+          </select>
+          <div style="font-size:0.75rem;color:#888;margin-top:0.35rem;">বিদ্যমান কোনো সদস্যকে বাছাই করলে তাকে সরাসরি Username/Password দেওয়া যাবে। (যাদের আগে থেকেই লগইন আছে তারা এই তালিকায় দেখাবে না)</div>
+        </div>
+
         <!-- PHOTO UPLOAD -->
-        <div style="text-align:center;margin-bottom:1.25rem;">
+        <div id="au2-photo-block" style="text-align:center;margin-bottom:1.25rem;">
           <div id="au2-preview" style="width:80px;height:80px;border-radius:50%;background:#e8f5ee;border:3px dashed #1B6B3A;margin:0 auto 0.75rem;display:flex;align-items:center;justify-content:center;font-size:2rem;overflow:hidden;cursor:pointer;" onclick="document.getElementById('au2-photo-input').click()">👤</div>
           <input id="au2-photo-input" type="file" accept="image/*" style="display:none;" onchange="previewPhoto(this)">
           <button onclick="document.getElementById('au2-photo-input').click()" style="background:#e8f5ee;color:#1B6B3A;border:1px solid #c8e6c9;padding:0.35rem 1rem;border-radius:8px;cursor:pointer;font-size:0.85rem;font-family:inherit;">📷 ছবি আপলোড করুন</button>
@@ -1468,25 +1526,58 @@
           <label style="display:block;font-size:0.85rem;color:#666;margin-bottom:0.35rem;font-weight:500;">পূর্ণ নাম *</label>
           <input id="au2-name" type="text" placeholder="সদস্যের নাম" style="width:100%;padding:0.65rem 1rem;border:1px solid #ddeee5;border-radius:8px;font-size:0.95rem;outline:none;font-family:inherit;">
         </div>
-        <div style="margin-bottom:1rem;">
-          <label style="display:block;font-size:0.85rem;color:#666;margin-bottom:0.35rem;font-weight:500;">ইউজারনেম *</label>
-          <input id="au2-user" type="text" placeholder="username (ইংরেজিতে)" style="width:100%;padding:0.65rem 1rem;border:1px solid #ddeee5;border-radius:8px;font-size:0.95rem;outline:none;font-family:inherit;">
+        <div style="background:#f5f9ff;border:1px solid #d0e4f7;border-radius:10px;padding:0.85rem;margin-bottom:1rem;">
+          <div id="au2-login-title" style="font-size:0.8rem;color:#1B4F72;font-weight:600;margin-bottom:0.6rem;">🔑 লগইন অ্যাক্সেস (ঐচ্ছিক)</div>
+          <div id="au2-login-hint" style="font-size:0.75rem;color:#888;margin-bottom:0.6rem;">খালি রাখলে এই সদস্য শুধু তালিকায় থাকবে, লগইন করতে পারবেন না।</div>
+          <div style="margin-bottom:0.7rem;">
+            <input id="au2-user" type="text" placeholder="ইউজারনেম (ঐচ্ছিক)" style="width:100%;padding:0.6rem 0.9rem;border:1px solid #ddeee5;border-radius:8px;font-size:0.9rem;outline:none;font-family:inherit;">
+          </div>
+          <div>
+            <input id="au2-pass" type="text" placeholder="পাসওয়ার্ড (ঐচ্ছিক)" style="width:100%;padding:0.6rem 0.9rem;border:1px solid #ddeee5;border-radius:8px;font-size:0.9rem;outline:none;font-family:inherit;">
+          </div>
         </div>
-        <div style="margin-bottom:1rem;">
-          <label style="display:block;font-size:0.85rem;color:#666;margin-bottom:0.35rem;font-weight:500;">পাসওয়ার্ড *</label>
-          <input id="au2-pass" type="text" placeholder="পাসওয়ার্ড দিন" style="width:100%;padding:0.65rem 1rem;border:1px solid #ddeee5;border-radius:8px;font-size:0.95rem;outline:none;font-family:inherit;">
-        </div>
-        <div style="margin-bottom:1.5rem;">
+        <div id="au2-phone-block" style="margin-bottom:1.5rem;">
           <label style="display:block;font-size:0.85rem;color:#666;margin-bottom:0.35rem;font-weight:500;">ফোন নম্বর</label>
           <input id="au2-phone" type="text" placeholder="01XXXXXXXXX" style="width:100%;padding:0.65rem 1rem;border:1px solid #ddeee5;border-radius:8px;font-size:0.95rem;outline:none;font-family:inherit;">
         </div>
         <div style="display:flex;gap:0.75rem;">
           <button onclick="document.getElementById('add-user-modal').remove()" style="flex:1;background:#f5f5f5;color:#555;border:1px solid #ddd;padding:0.75rem;border-radius:8px;cursor:pointer;font-family:inherit;">বাতিল</button>
-          <button onclick="doAddUserFull()" style="flex:2;background:#1B6B3A;color:#fff;border:none;padding:0.75rem;border-radius:8px;font-size:1rem;font-family:inherit;font-weight:600;cursor:pointer;">তৈরি করুন ✓</button>
+          <button id="au2-submit-btn" onclick="doAddUserFull()" style="flex:2;background:#1B6B3A;color:#fff;border:none;padding:0.75rem;border-radius:8px;font-size:1rem;font-family:inherit;font-weight:600;cursor:pointer;">তৈরি করুন ✓</button>
         </div>
       </div>`;
     overlay.addEventListener('click', e => { if(e.target===overlay) overlay.remove(); });
     document.body.appendChild(overlay);
+  };
+
+  // "সদস্য বাছাই করুন" ড্রপডাউন থেকে বিদ্যমান সদস্য বাছাই করলে ফর্ম মোড পাল্টে যাবে
+  window.onSelectExistingMember = function(select) {
+    const users = getUsers();
+    const nameInput = document.getElementById('au2-name');
+    const phoneBlock = document.getElementById('au2-phone-block');
+    const photoBlock = document.getElementById('au2-photo-block');
+    const loginTitle = document.getElementById('au2-login-title');
+    const loginHint = document.getElementById('au2-login-hint');
+    const submitBtn = document.getElementById('au2-submit-btn');
+    if (select.value) {
+      const member = users.find(u => u.id === Number(select.value));
+      nameInput.value = member ? member.name : '';
+      nameInput.disabled = true;
+      nameInput.style.background = '#f5f5f5';
+      phoneBlock.style.display = 'none';
+      photoBlock.style.display = 'none';
+      loginTitle.textContent = '🔑 লগইন অ্যাক্সেস দিন';
+      loginHint.textContent = 'এই সদস্যকে লগইন করতে দিতে ইউজারনেম ও পাসওয়ার্ড দিন (আবশ্যক)';
+      submitBtn.textContent = '✓ লগইন দিন';
+    } else {
+      nameInput.value = '';
+      nameInput.disabled = false;
+      nameInput.style.background = '#fff';
+      phoneBlock.style.display = 'block';
+      photoBlock.style.display = 'block';
+      loginTitle.textContent = '🔑 লগইন অ্যাক্সেস (ঐচ্ছিক)';
+      loginHint.textContent = 'খালি রাখলে এই সদস্য শুধু তালিকায় থাকবে, লগইন করতে পারবেন না।';
+      submitBtn.textContent = 'তৈরি করুন ✓';
+    }
   };
 
   window.previewPhoto = function(input) {
@@ -1501,16 +1592,37 @@
   };
 
   window.doAddUserFull = function() {
+    const selectEl = document.getElementById('au2-select-member');
+    const selectedId = selectEl ? selectEl.value : '';
     const name = document.getElementById('au2-name').value.trim();
     const username = document.getElementById('au2-user').value.trim();
     const password = document.getElementById('au2-pass').value.trim();
+    const err = document.getElementById('add-err2');
+    const users = getUsers();
+
+    if (selectedId) {
+      // বিদ্যমান সদস্যকে লগইন দেওয়া হচ্ছে
+      if (!username || !password) { err.style.display='block'; err.textContent='❌ ইউজারনেম ও পাসওয়ার্ড দুটোই দিন!'; return; }
+      if (users.find(u => u.username === username && u.id !== Number(selectedId))) { err.style.display='block'; err.textContent='❌ এই ইউজারনেম আগেই আছে!'; return; }
+      const member = users.find(u => u.id === Number(selectedId));
+      if (!member) { err.style.display='block'; err.textContent='❌ সদস্য খুঁজে পাওয়া যায়নি!'; return; }
+      member.username = username;
+      member.password = password;
+      member.hasLogin = true;
+      saveUsers(users);
+      document.getElementById('add-user-modal').remove();
+      renderAdminPanel();
+      return;
+    }
+
+    // নতুন সদস্য তৈরি
     const phone = document.getElementById('au2-phone').value.trim();
     const photo = document.getElementById('au2-preview').dataset.photo || '';
-    const err = document.getElementById('add-err2');
-    if (!name||!username||!password) { err.style.display='block'; err.textContent='❌ নাম, ইউজারনেম ও পাসওয়ার্ড দিন!'; return; }
-    const users = getUsers();
-    if (users.find(u => u.username===username)) { err.style.display='block'; err.textContent='❌ এই ইউজারনেম আগেই আছে!'; return; }
-    users.push({ id: Date.now(), name, username, password, role: 'sub', phone, photo, joined: new Date().toLocaleDateString('bn-BD') });
+    if (!name) { err.style.display='block'; err.textContent='❌ নাম দিন!'; return; }
+    if ((username && !password) || (!username && password)) { err.style.display='block'; err.textContent='❌ লগইন দিতে চাইলে ইউজারনেম ও পাসওয়ার্ড দুটোই দিন!'; return; }
+    if (username && users.find(u => u.username===username)) { err.style.display='block'; err.textContent='❌ এই ইউজারনেম আগেই আছে!'; return; }
+    const hasLogin = !!(username && password);
+    users.push({ id: Date.now(), name, username: hasLogin?username:'', password: hasLogin?password:'', hasLogin, role: 'sub', phone, photo, joined: new Date().toLocaleDateString('bn-BD') });
     saveUsers(users);
     document.getElementById('add-user-modal').remove();
     renderAdminPanel();
@@ -1531,9 +1643,9 @@
             ${a.job && a.job!=='পেশা নির্বাচন করুন' ? `<div style="font-size:0.8rem;color:#888;">💼 ${a.job}</div>` : ''}
             ${a.reason ? `<div style="font-size:0.85rem;color:#444;margin-top:6px;">"${a.reason}"</div>` : ''}
           </div>
-          <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
+          <div id="app-actions-${a.id}" style="display:flex;gap:0.5rem;flex-wrap:wrap;align-items:center;">
             ${a.status==='pending' ? `<button onclick="approveApp(${a.id})" style="background:#e8f5ee;color:#1B6B3A;border:1px solid #c8e6c9;padding:0.3rem 0.75rem;border-radius:6px;cursor:pointer;font-size:0.82rem;font-family:inherit;">✓ অনুমোদন</button>` : ''}
-            <button onclick="deleteApp(${a.id})" style="background:#fee;color:#c00;border:1px solid #fcc;padding:0.3rem 0.75rem;border-radius:6px;cursor:pointer;font-size:0.82rem;font-family:inherit;">মুছুন</button>
+            <button onclick="askDeleteApp(${a.id})" style="background:#fee;color:#c00;border:1px solid #fcc;padding:0.3rem 0.75rem;border-radius:6px;cursor:pointer;font-size:0.82rem;font-family:inherit;">মুছুন</button>
           </div>
         </div>
       </div>`).join('') : '<div style="text-align:center;padding:3rem;color:#aaa;">কোনো আবেদন নেই</div>';
@@ -1557,18 +1669,97 @@
     const APP_KEY = 'taruner_alo_applications';
     const apps = JSON.parse(localStorage.getItem(APP_KEY)||'[]');
     const app = apps.find(a => a.id === id);
-    if (app) { app.status = 'approved'; localStorage.setItem(APP_KEY, JSON.stringify(apps)); }
-    document.getElementById('apps-modal').remove();
+    if (!app) return;
+    document.getElementById('apps-modal') && document.getElementById('apps-modal').remove();
+
+    // অনুমোদনের সাথে সাথেই সদস্যের জন্য ইউজারনেম/পাসওয়ার্ড সেট করে Sub User তৈরি করা হয়
+    const overlay = document.createElement('div');
+    overlay.id = 'approve-user-modal';
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:10000;display:flex;align-items:center;justify-content:center;padding:1rem;';
+    overlay.innerHTML = `
+      <div style="background:#fff;border-radius:16px;padding:2rem;width:100%;max-width:440px;box-shadow:0 20px 60px rgba(0,0,0,0.3);max-height:90vh;overflow-y:auto;">
+        <h2 style="font-family:Noto Serif Bengali,serif;color:#1B4F72;font-size:1.25rem;margin-bottom:0.5rem;">✓ আবেদন অনুমোদন করুন</h2>
+        <p style="color:#888;font-size:0.85rem;margin-bottom:1.25rem;">"${app.name}" কে সদস্য তালিকায় যুক্ত করা হবে। লগইন অ্যাক্সেস দিতে চাইলে নিচে ইউজারনেম/পাসওয়ার্ড দিন, নাহলে খালি রাখুন।</p>
+        <div id="approve-err" style="display:none;background:#fee;color:#c00;padding:0.6rem 1rem;border-radius:8px;font-size:0.88rem;margin-bottom:1rem;"></div>
+        <div style="margin-bottom:1rem;">
+          <label style="display:block;font-size:0.85rem;color:#666;margin-bottom:0.35rem;font-weight:500;">পূর্ণ নাম</label>
+          <input id="ap-name" type="text" value="${(app.name||'').replace(/"/g,'&quot;')}" style="width:100%;padding:0.65rem 1rem;border:1px solid #ddeee5;border-radius:8px;font-size:0.95rem;outline:none;font-family:inherit;">
+        </div>
+        <div style="background:#f5f9ff;border:1px solid #d0e4f7;border-radius:10px;padding:0.85rem;margin-bottom:1rem;">
+          <div style="font-size:0.8rem;color:#1B4F72;font-weight:600;margin-bottom:0.6rem;">🔑 লগইন অ্যাক্সেস (ঐচ্ছিক)</div>
+          <div style="margin-bottom:0.7rem;">
+            <input id="ap-user" type="text" placeholder="ইউজারনেম (ঐচ্ছিক)" style="width:100%;padding:0.6rem 0.9rem;border:1px solid #ddeee5;border-radius:8px;font-size:0.9rem;outline:none;font-family:inherit;">
+          </div>
+          <div>
+            <input id="ap-pass" type="text" placeholder="পাসওয়ার্ড (ঐচ্ছিক)" style="width:100%;padding:0.6rem 0.9rem;border:1px solid #ddeee5;border-radius:8px;font-size:0.9rem;outline:none;font-family:inherit;">
+          </div>
+        </div>
+        <div style="margin-bottom:1.5rem;">
+          <label style="display:block;font-size:0.85rem;color:#666;margin-bottom:0.35rem;font-weight:500;">ফোন নম্বর</label>
+          <input id="ap-phone" type="text" value="${(app.phone||'').replace(/"/g,'&quot;')}" style="width:100%;padding:0.65rem 1rem;border:1px solid #ddeee5;border-radius:8px;font-size:0.95rem;outline:none;font-family:inherit;">
+        </div>
+        <div style="display:flex;gap:0.75rem;">
+          <button onclick="document.getElementById('approve-user-modal').remove(); showApplicationsFull();" style="flex:1;background:#f5f5f5;color:#555;border:1px solid #ddd;padding:0.75rem;border-radius:8px;cursor:pointer;font-family:inherit;">বাতিল</button>
+          <button onclick="doApproveApp(${id})" style="flex:2;background:linear-gradient(135deg,#2e9e5b,#1B6B3A);color:#fff;border:none;padding:0.75rem;border-radius:8px;font-size:1rem;font-family:inherit;font-weight:600;cursor:pointer;">✓ সদস্য তৈরি করুন</button>
+        </div>
+      </div>`;
+    overlay.addEventListener('click', e => { if(e.target===overlay) overlay.remove(); });
+    document.body.appendChild(overlay);
+  };
+
+  window.doApproveApp = function(id) {
+    const name = document.getElementById('ap-name').value.trim();
+    const username = document.getElementById('ap-user').value.trim();
+    const password = document.getElementById('ap-pass').value.trim();
+    const phone = document.getElementById('ap-phone').value.trim();
+    const err = document.getElementById('approve-err');
+    if (!name) {
+      err.style.display = 'block';
+      err.textContent = '❌ নাম দিন!';
+      return;
+    }
+    if ((username && !password) || (!username && password)) {
+      err.style.display = 'block';
+      err.textContent = '❌ লগইন দিতে চাইলে ইউজারনেম ও পাসওয়ার্ড দুটোই দিন!';
+      return;
+    }
+    const users = getUsers();
+    if (username && users.find(u => u.username === username)) {
+      err.style.display = 'block';
+      err.textContent = '❌ এই ইউজারনেম আগেই আছে!';
+      return;
+    }
+    const hasLogin = !!(username && password);
+    users.push({ id: Date.now(), name, username: hasLogin?username:'', password: hasLogin?password:'', hasLogin, role: 'sub', phone, photo: '', joined: new Date().toLocaleDateString('bn-BD') });
+    saveUsers(users);
+
+    const APP_KEY = 'taruner_alo_applications';
+    const apps = JSON.parse(localStorage.getItem(APP_KEY)||'[]');
+    const app = apps.find(a => a.id === id);
+    if (app) app.status = 'approved';
+    localStorage.setItem(APP_KEY, JSON.stringify(apps));
+
+    document.getElementById('approve-user-modal').remove();
     showApplicationsFull();
     renderAdminPanel();
   };
 
+  // native confirm() এড়িয়ে ইনলাইন নিশ্চিতকরণ
+  window.askDeleteApp = function(id) {
+    const box = document.getElementById(`app-actions-${id}`);
+    if (!box) return;
+    box.innerHTML = `
+      <span style="font-size:0.78rem;color:#c00;font-weight:600;">নিশ্চিত?</span>
+      <button onclick="deleteApp(${id})" style="background:#c00;color:#fff;border:none;padding:0.3rem 0.6rem;border-radius:6px;cursor:pointer;font-size:0.78rem;font-family:inherit;">হ্যাঁ</button>
+      <button onclick="showApplicationsFull()" style="background:#f5f5f5;color:#555;border:1px solid #ddd;padding:0.3rem 0.6rem;border-radius:6px;cursor:pointer;font-size:0.78rem;font-family:inherit;">বাতিল</button>
+    `;
+  };
+
   window.deleteApp = function(id) {
-    if (!confirm('এই আবেদন মুছবেন?')) return;
     const APP_KEY = 'taruner_alo_applications';
     const apps = JSON.parse(localStorage.getItem(APP_KEY)||'[]').filter(a => a.id !== id);
     localStorage.setItem(APP_KEY, JSON.stringify(apps));
-    document.getElementById('apps-modal').remove();
+    document.getElementById('apps-modal') && document.getElementById('apps-modal').remove();
     showApplicationsFull();
     renderAdminPanel();
   };
@@ -1707,8 +1898,41 @@
     renderAdminPanel();
   };
 
+  // native confirm() এড়িয়ে ইনলাইন নিশ্চিতকরণ
+  window.askRevokeLogin = function(id) {
+    const box = document.getElementById(`login-status-${id}`);
+    if (!box) return;
+    box.innerHTML = `
+      <span style="font-size:0.78rem;color:#c00;font-weight:600;margin-right:0.4rem;">লগইন বাতিল করবেন?</span>
+      <button onclick="revokeLogin(${id})" style="background:#c00;color:#fff;border:none;padding:0.25rem 0.6rem;border-radius:6px;cursor:pointer;font-size:0.76rem;font-family:inherit;">হ্যাঁ</button>
+      <button onclick="renderAdminPanel()" style="background:#f5f5f5;color:#555;border:1px solid #ddd;padding:0.25rem 0.6rem;border-radius:6px;cursor:pointer;font-size:0.76rem;font-family:inherit;">বাতিল</button>
+    `;
+  };
+
+  window.revokeLogin = function(id) {
+    const users = getUsers();
+    const user = users.find(u => u.id === id);
+    if (!user) return;
+    user.hasLogin = false;
+    user.username = '';
+    user.password = '';
+    saveUsers(users);
+    renderAdminPanel();
+  };
+
+  window.askDeleteUser = function(id) {
+    const users = getUsers();
+    const user = users.find(u => u.id === id);
+    if (!user) return;
+    const row = document.getElementById(`login-status-${id}`);
+    if (row) row.parentElement.querySelector('td:last-child').innerHTML = `
+      <span style="font-size:0.78rem;color:#c00;font-weight:600;margin-right:0.4rem;">নিশ্চিত?</span>
+      <button onclick="deleteUser(${id})" style="background:#c00;color:#fff;border:none;padding:0.3rem 0.6rem;border-radius:6px;cursor:pointer;font-size:0.78rem;font-family:inherit;">হ্যাঁ</button>
+      <button onclick="renderAdminPanel()" style="background:#f5f5f5;color:#555;border:1px solid #ddd;padding:0.3rem 0.6rem;border-radius:6px;cursor:pointer;font-size:0.78rem;font-family:inherit;">বাতিল</button>
+    `;
+  };
+
   window.deleteUser = function(id) {
-    if (!confirm('এই সদস্যকে বাদ দিবেন?')) return;
     const users = getUsers().filter(u => u.id !== id);
     saveUsers(users);
     renderAdminPanel();
