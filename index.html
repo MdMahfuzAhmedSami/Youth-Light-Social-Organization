@@ -1482,7 +1482,7 @@
           ${can('savings') ? `<button onclick="showSavingsFull()" style="background:linear-gradient(135deg,#1fab89,#0d8a6f);color:#fff;border:none;padding:0.8rem 1.6rem;border-radius:12px;cursor:pointer;font-family:inherit;font-size:0.95rem;font-weight:700;box-shadow:0 4px 14px rgba(13,138,111,0.35);">💰 সঞ্চয় ব্যবস্থাপনা</button>` : ''}
         </div>
         ${!isFullAdmin && perms.length===0 ? `<div style="text-align:center;padding:3rem;color:#999;background:#fff;border-radius:14px;border:1px solid #eee;">এখনো আপনাকে কোনো নির্দিষ্ট কাজের অনুমতি দেওয়া হয়নি। অ্যাডমিনের সাথে যোগাযোগ করুন।</div>` : ''}
-        ${isFullAdmin ? `
+        ${can('members') ? `
 
         <!-- MEMBERS TABLE -->
         <div style="background:#fff;border-radius:14px;border:1px solid #ddeee5;box-shadow:0 4px 16px rgba(0,0,0,0.06);overflow:hidden;margin-bottom:1.5rem;">
@@ -1505,7 +1505,7 @@
                   <th style="padding:0.75rem 1rem;text-align:left;color:#555;font-weight:600;">ফোন</th>
                   <th style="padding:0.75rem 1rem;text-align:left;color:#555;font-weight:600;">যোগ দিয়েছেন</th>
                   <th style="padding:0.75rem 1rem;text-align:left;color:#555;font-weight:600;">লগইন</th>
-                  <th style="padding:0.75rem 1rem;text-align:left;color:#555;font-weight:600;"></th>
+                  ${isFullAdmin ? '<th style="padding:0.75rem 1rem;text-align:left;color:#555;font-weight:600;"></th>' : ''}
                 </tr>
               </thead>
               <tbody id="members-table-body">${members.length ? members.map((u, idx) => `
@@ -1516,20 +1516,22 @@
                   <td style="padding:0.85rem 1rem;color:#888;font-size:0.85rem;">${u.joined||'-'}</td>
                   <td style="padding:0.85rem 1rem;" id="login-status-${u.id}">
                     ${u.hasLogin
-                      ? `<span style="background:#e8f5ee;color:#1B6B3A;padding:0.25rem 0.7rem;border-radius:20px;font-size:0.78rem;font-weight:600;margin-right:0.4rem;">🔓 সক্রিয়</span><button onclick="askRevokeLogin(${u.id})" style="background:#fff3e0;color:#b8860b;border:1px solid #f0d090;padding:0.25rem 0.6rem;border-radius:6px;cursor:pointer;font-size:0.76rem;font-family:inherit;">বাতিল</button>`
+                      ? `<span style="background:#e8f5ee;color:#1B6B3A;padding:0.25rem 0.7rem;border-radius:20px;font-size:0.78rem;font-weight:600;margin-right:0.4rem;">🔓 সক্রিয়</span>${isFullAdmin ? `<button onclick="askRevokeLogin(${u.id})" style="background:#fff3e0;color:#b8860b;border:1px solid #f0d090;padding:0.25rem 0.6rem;border-radius:6px;cursor:pointer;font-size:0.76rem;font-family:inherit;">বাতিল</button>` : ''}`
                       : `<span style="background:#f5f5f5;color:#999;padding:0.25rem 0.7rem;border-radius:20px;font-size:0.78rem;">🔒 নেই</span>`}
                   </td>
-                  <td style="padding:0.85rem 1rem;white-space:nowrap;">
+                  ${isFullAdmin ? `<td style="padding:0.85rem 1rem;white-space:nowrap;">
                     <button onclick="showEditMemberModal(${u.id})" style="background:linear-gradient(135deg,#4f9ce8,#2575fc);color:#fff;border:none;padding:0.35rem 0.75rem;border-radius:8px;cursor:pointer;font-size:0.82rem;font-family:inherit;font-weight:600;box-shadow:0 2px 6px rgba(37,117,252,0.3);margin-right:0.4rem;">✏️ প্রোফাইল</button>
                     <button onclick="askDeleteUser(${u.id})" style="background:linear-gradient(135deg,#f36a5a,#e74c3c);color:#fff;border:none;padding:0.35rem 0.85rem;border-radius:8px;cursor:pointer;font-size:0.82rem;font-family:inherit;font-weight:600;box-shadow:0 2px 6px rgba(231,76,60,0.3);">বাদ দিন</button>
-                  </td>
+                  </td>` : ''}
                 </tr>`).join('') : `<tr><td colspan="6" style="text-align:center;padding:3rem;color:#aaa;">কোনো সদস্য নেই</td></tr>`}
               </tbody>
             </table>
             <div id="member-search-empty" style="display:none;text-align:center;padding:2.5rem;color:#aaa;">🔍 এই নামে কোনো সদস্য পাওয়া যায়নি</div>
           </div>
         </div>
+        ` : ''}
 
+        ${isFullAdmin ? `
         <!-- USERNAME / LOGIN TABLE -->
         <div style="background:#fff;border-radius:14px;border:1px solid #d0e8f7;box-shadow:0 4px 16px rgba(0,0,0,0.06);overflow:hidden;">
           <div style="padding:1.1rem 1.5rem;border-bottom:1px solid #e8f4fc;background:linear-gradient(135deg,#eaf4ff,#f0f8ff);display:flex;justify-content:space-between;align-items:center;">
@@ -2096,6 +2098,7 @@
 
   // কোন Sub User কোন কাজে (গ্যালারি/কমিটি/সঞ্চয়/আবেদন/বার্তা) কাজ করতে পারবেন তা সেট করার মডাল
   const PERMISSION_OPTIONS = [
+    { key: 'members', label: '👥 সদস্যদের তালিকা দেখুন' },
     { key: 'gallery', label: '🖼️ গ্যালারি ব্যবস্থাপনা' },
     { key: 'committee', label: '🧑‍🤝‍🧑 কমিটি ব্যবস্থাপনা' },
     { key: 'savings', label: '💰 সঞ্চয় ব্যবস্থাপনা' },
