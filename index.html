@@ -1040,11 +1040,19 @@
       ];
       localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
     }
-    // পুরনো ডেটার সাথে সামঞ্জস্য রাখতে hasLogin ফিল্ড না থাকলে যোগ করা হয়
+    // পুরনো ডেটার সাথে সামঞ্জস্য রাখতে hasLogin ও active ফিল্ড না থাকলে যোগ করা হয়
     let changed = false;
     list.forEach(u => {
       if (u.hasLogin === undefined) {
         u.hasLogin = u.role === 'admin' ? true : !!(u.username && u.password);
+        changed = true;
+      }
+      if (u.active === undefined) {
+        u.active = true;
+        changed = true;
+      }
+      if (u.permissions === undefined) {
+        u.permissions = [];
         changed = true;
       }
     });
@@ -1344,13 +1352,20 @@
     const u = document.getElementById('li-user').value.trim();
     const p = document.getElementById('li-pass').value.trim();
     const users = getUsers();
-    const found = users.find(x => x.username === u && x.password === p && (x.role === 'admin' || x.hasLogin));
-    if (!found) {
+    const matched = users.find(x => x.username === u && x.password === p && (x.role === 'admin' || x.hasLogin));
+    if (!matched) {
       const err = document.getElementById('login-err');
       err.style.display = 'block';
       err.textContent = '❌ ইউজারনেম বা পাসওয়ার্ড ভুল!';
       return;
     }
+    if (matched.role !== 'admin' && matched.active === false) {
+      const err = document.getElementById('login-err');
+      err.style.display = 'block';
+      err.textContent = '❌ আপনার অ্যাকাউন্ট নিষ্ক্রিয় (Passive) করা হয়েছে!';
+      return;
+    }
+    const found = matched;
     setSession(found);
     document.querySelector('.fixed, [style*="position:fixed"]') && document.querySelectorAll('div[style*="position:fixed"]').forEach(e => e.remove());
     updateNavBtn();
@@ -1363,6 +1378,7 @@
     if (!s) return showLoginModal();
 
     if (s.role === 'admin') showAdminPanel();
+    else if (s.permissions && s.permissions.length) showAdminPanel();
     else showUserPanel();
   }
 
@@ -1401,6 +1417,11 @@
     const unreadMsgs = msgs.filter(m => !m.read).length;
     const unreadApps = apps.filter(a => a.status === 'pending').length;
 
+    const session = getSession();
+    const isFullAdmin = !session || session.role === 'admin';
+    const perms = (session && session.permissions) || [];
+    const can = key => isFullAdmin || perms.includes(key);
+
     const rows = members.length ? members.map(u => `
       <tr style="border-bottom:1px solid #f0f0f0;">
         <td style="padding:0.75rem 1rem;">${u.name}</td>
@@ -1419,7 +1440,7 @@
           <div style="width:44px;height:44px;background:linear-gradient(135deg,#f0c040,#e08a1e);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.3rem;box-shadow:0 3px 10px rgba(0,0,0,0.25);">⚙️</div>
           <div>
             <div style="font-family:Noto Serif Bengali,serif;font-size:1.25rem;font-weight:700;">Admin Panel</div>
-            <div style="font-size:0.78rem;opacity:0.85;">তারুণের আলো সামাজিক সংগঠন</div>
+            <div style="font-size:0.78rem;opacity:0.85;">${isFullAdmin ? 'তারুণের আলো সামাজিক সংগঠন' : `${session.name} • সীমিত অ্যাক্সেস`}</div>
           </div>
         </div>
         <button onclick="doLogout()" style="background:linear-gradient(135deg,#e74c3c,#c0392b);color:#fff;border:none;padding:0.5rem 1.2rem;border-radius:10px;cursor:pointer;font-family:inherit;font-size:0.9rem;font-weight:600;box-shadow:0 3px 10px rgba(0,0,0,0.2);">🚪 লগআউট</button>
@@ -1453,13 +1474,15 @@
 
         <!-- ACTION BUTTONS -->
         <div style="display:flex;gap:1rem;margin-bottom:2rem;flex-wrap:wrap;">
-          <button onclick="showAddUserFull()" style="background:linear-gradient(135deg,#2e9e5b,#1B6B3A);color:#fff;border:none;padding:0.8rem 1.6rem;border-radius:12px;cursor:pointer;font-family:inherit;font-size:0.95rem;font-weight:700;box-shadow:0 4px 14px rgba(27,107,58,0.35);">➕ নতুন Sub User তৈরি</button>
-          <button onclick="showApplicationsFull()" style="background:linear-gradient(135deg,#e6a817,#b8860b);color:#fff;border:none;padding:0.8rem 1.6rem;border-radius:12px;cursor:pointer;font-family:inherit;font-size:0.95rem;font-weight:700;box-shadow:0 4px 14px rgba(184,134,11,0.35);">📋 আবেদনসমূহ ${unreadApps > 0 ? `<span style="background:#e74c3c;color:#fff;border-radius:50%;padding:2px 7px;font-size:0.75rem;margin-left:4px;">${unreadApps}</span>` : ''}</button>
-          <button onclick="showMessagesFull()" style="background:linear-gradient(135deg,#2e7ec2,#1B4F72);color:#fff;border:none;padding:0.8rem 1.6rem;border-radius:12px;cursor:pointer;font-family:inherit;font-size:0.95rem;font-weight:700;box-shadow:0 4px 14px rgba(27,79,114,0.35);">💬 বার্তাসমূহ ${unreadMsgs > 0 ? `<span style="background:#e74c3c;color:#fff;border-radius:50%;padding:2px 7px;font-size:0.75rem;margin-left:4px;">${unreadMsgs}</span>` : ''}</button>
-          <button onclick="showGalleryFull()" style="background:linear-gradient(135deg,#a569c9,#8e44ad);color:#fff;border:none;padding:0.8rem 1.6rem;border-radius:12px;cursor:pointer;font-family:inherit;font-size:0.95rem;font-weight:700;box-shadow:0 4px 14px rgba(142,68,173,0.35);">🖼️ গ্যালারি ব্যবস্থাপনা</button>
-          <button onclick="showCommitteeFull()" style="background:linear-gradient(135deg,#e05c4c,#c0392b);color:#fff;border:none;padding:0.8rem 1.6rem;border-radius:12px;cursor:pointer;font-family:inherit;font-size:0.95rem;font-weight:700;box-shadow:0 4px 14px rgba(192,57,43,0.35);">🧑‍🤝‍🧑 কমিটি ব্যবস্থাপনা</button>
-          <button onclick="showSavingsFull()" style="background:linear-gradient(135deg,#1fab89,#0d8a6f);color:#fff;border:none;padding:0.8rem 1.6rem;border-radius:12px;cursor:pointer;font-family:inherit;font-size:0.95rem;font-weight:700;box-shadow:0 4px 14px rgba(13,138,111,0.35);">💰 সঞ্চয় ব্যবস্থাপনা</button>
+          ${isFullAdmin ? `<button onclick="showAddUserFull()" style="background:linear-gradient(135deg,#2e9e5b,#1B6B3A);color:#fff;border:none;padding:0.8rem 1.6rem;border-radius:12px;cursor:pointer;font-family:inherit;font-size:0.95rem;font-weight:700;box-shadow:0 4px 14px rgba(27,107,58,0.35);">➕ নতুন Sub User তৈরি</button>` : ''}
+          ${can('applications') ? `<button onclick="showApplicationsFull()" style="background:linear-gradient(135deg,#e6a817,#b8860b);color:#fff;border:none;padding:0.8rem 1.6rem;border-radius:12px;cursor:pointer;font-family:inherit;font-size:0.95rem;font-weight:700;box-shadow:0 4px 14px rgba(184,134,11,0.35);">📋 আবেদনসমূহ ${unreadApps > 0 ? `<span style="background:#e74c3c;color:#fff;border-radius:50%;padding:2px 7px;font-size:0.75rem;margin-left:4px;">${unreadApps}</span>` : ''}</button>` : ''}
+          ${can('messages') ? `<button onclick="showMessagesFull()" style="background:linear-gradient(135deg,#2e7ec2,#1B4F72);color:#fff;border:none;padding:0.8rem 1.6rem;border-radius:12px;cursor:pointer;font-family:inherit;font-size:0.95rem;font-weight:700;box-shadow:0 4px 14px rgba(27,79,114,0.35);">💬 বার্তাসমূহ ${unreadMsgs > 0 ? `<span style="background:#e74c3c;color:#fff;border-radius:50%;padding:2px 7px;font-size:0.75rem;margin-left:4px;">${unreadMsgs}</span>` : ''}</button>` : ''}
+          ${can('gallery') ? `<button onclick="showGalleryFull()" style="background:linear-gradient(135deg,#a569c9,#8e44ad);color:#fff;border:none;padding:0.8rem 1.6rem;border-radius:12px;cursor:pointer;font-family:inherit;font-size:0.95rem;font-weight:700;box-shadow:0 4px 14px rgba(142,68,173,0.35);">🖼️ গ্যালারি ব্যবস্থাপনা</button>` : ''}
+          ${can('committee') ? `<button onclick="showCommitteeFull()" style="background:linear-gradient(135deg,#e05c4c,#c0392b);color:#fff;border:none;padding:0.8rem 1.6rem;border-radius:12px;cursor:pointer;font-family:inherit;font-size:0.95rem;font-weight:700;box-shadow:0 4px 14px rgba(192,57,43,0.35);">🧑‍🤝‍🧑 কমিটি ব্যবস্থাপনা</button>` : ''}
+          ${can('savings') ? `<button onclick="showSavingsFull()" style="background:linear-gradient(135deg,#1fab89,#0d8a6f);color:#fff;border:none;padding:0.8rem 1.6rem;border-radius:12px;cursor:pointer;font-family:inherit;font-size:0.95rem;font-weight:700;box-shadow:0 4px 14px rgba(13,138,111,0.35);">💰 সঞ্চয় ব্যবস্থাপনা</button>` : ''}
         </div>
+        ${!isFullAdmin && perms.length===0 ? `<div style="text-align:center;padding:3rem;color:#999;background:#fff;border-radius:14px;border:1px solid #eee;">এখনো আপনাকে কোনো নির্দিষ্ট কাজের অনুমতি দেওয়া হয়নি। অ্যাডমিনের সাথে যোগাযোগ করুন।</div>` : ''}
+        ${isFullAdmin ? `
 
         <!-- MEMBERS TABLE -->
         <div style="background:#fff;border-radius:14px;border:1px solid #ddeee5;box-shadow:0 4px 16px rgba(0,0,0,0.06);overflow:hidden;margin-bottom:1.5rem;">
@@ -1477,6 +1500,7 @@
             <table style="width:100%;border-collapse:collapse;font-size:0.9rem;">
               <thead>
                 <tr style="background:#f8fdf9;">
+                  <th style="padding:0.75rem 1rem;text-align:left;color:#555;font-weight:600;width:44px;">ক্র.</th>
                   <th style="padding:0.75rem 1rem;text-align:left;color:#555;font-weight:600;">নাম</th>
                   <th style="padding:0.75rem 1rem;text-align:left;color:#555;font-weight:600;">ফোন</th>
                   <th style="padding:0.75rem 1rem;text-align:left;color:#555;font-weight:600;">যোগ দিয়েছেন</th>
@@ -1484,8 +1508,9 @@
                   <th style="padding:0.75rem 1rem;text-align:left;color:#555;font-weight:600;"></th>
                 </tr>
               </thead>
-              <tbody id="members-table-body">${members.length ? members.map(u => `
+              <tbody id="members-table-body">${members.length ? members.map((u, idx) => `
                 <tr data-member-name="${(u.name||'').toLowerCase()}" data-member-phone="${(u.phone||'').toLowerCase()}" style="border-bottom:1px solid #f0f0f0;">
+                  <td style="padding:0.85rem 1rem;color:#888;font-weight:600;">${(idx+1).toLocaleString('bn-BD')}</td>
                   <td style="padding:0.85rem 1rem;font-weight:600;color:#1B4F72;">${u.name}${u.nid ? `<div style="font-weight:400;font-size:0.72rem;color:#b8860b;margin-top:2px;">🪪 NID যুক্ত</div>` : ''}</td>
                   <td style="padding:0.85rem 1rem;color:#666;">${u.phone||'-'}</td>
                   <td style="padding:0.85rem 1rem;color:#888;font-size:0.85rem;">${u.joined||'-'}</td>
@@ -1498,7 +1523,7 @@
                     <button onclick="showEditMemberModal(${u.id})" style="background:linear-gradient(135deg,#4f9ce8,#2575fc);color:#fff;border:none;padding:0.35rem 0.75rem;border-radius:8px;cursor:pointer;font-size:0.82rem;font-family:inherit;font-weight:600;box-shadow:0 2px 6px rgba(37,117,252,0.3);margin-right:0.4rem;">✏️ প্রোফাইল</button>
                     <button onclick="askDeleteUser(${u.id})" style="background:linear-gradient(135deg,#f36a5a,#e74c3c);color:#fff;border:none;padding:0.35rem 0.85rem;border-radius:8px;cursor:pointer;font-size:0.82rem;font-family:inherit;font-weight:600;box-shadow:0 2px 6px rgba(231,76,60,0.3);">বাদ দিন</button>
                   </td>
-                </tr>`).join('') : `<tr><td colspan="5" style="text-align:center;padding:3rem;color:#aaa;">কোনো সদস্য নেই</td></tr>`}
+                </tr>`).join('') : `<tr><td colspan="6" style="text-align:center;padding:3rem;color:#aaa;">কোনো সদস্য নেই</td></tr>`}
               </tbody>
             </table>
             <div id="member-search-empty" style="display:none;text-align:center;padding:2.5rem;color:#aaa;">🔍 এই নামে কোনো সদস্য পাওয়া যায়নি</div>
@@ -1519,6 +1544,7 @@
                   <th style="padding:0.75rem 1rem;text-align:left;color:#555;font-weight:600;">Username</th>
                   <th style="padding:0.75rem 1rem;text-align:left;color:#555;font-weight:600;">Password</th>
                   <th style="padding:0.75rem 1rem;text-align:left;color:#555;font-weight:600;">ধরন</th>
+                  <th style="padding:0.75rem 1rem;text-align:left;color:#555;font-weight:600;">স্ট্যাটাস</th>
                   <th style="padding:0.75rem 1rem;text-align:left;color:#555;font-weight:600;"></th>
                 </tr>
               </thead>
@@ -1535,12 +1561,19 @@
                   <td style="padding:0.85rem 1rem;color:#1B4F72;font-family:monospace;font-size:0.95rem;">${u.username}</td>
                   <td style="padding:0.85rem 1rem;color:#1B6B3A;font-family:monospace;font-weight:700;font-size:0.95rem;">${u.password||'-'}</td>
                   <td style="padding:0.85rem 1rem;"><span style="background:#e8f5ee;color:#1B6B3A;padding:0.2rem 0.7rem;border-radius:4px;font-size:0.78rem;">Sub User</span></td>
-                  <td style="padding:0.85rem 1rem;" id="cred-actions-${u.id}"><button onclick="askRemoveCredential(${u.id})" style="background:linear-gradient(135deg,#f36a5a,#e74c3c);color:#fff;border:none;padding:0.3rem 0.75rem;border-radius:6px;cursor:pointer;font-size:0.78rem;font-family:inherit;font-weight:600;">বাদ দিন</button></td>
-                </tr>`).join('') : `<tr><td colspan="5" style="text-align:center;padding:3rem;color:#aaa;">এখনো কাউকে লগইন দেওয়া হয়নি</td></tr>`}
+                  <td style="padding:0.85rem 1rem;" id="status-toggle-${u.id}">
+                    <button onclick="toggleUserStatus(${u.id})" style="background:${u.active===false?'#fdf1e0':'#e8f5ee'};color:${u.active===false?'#b8860b':'#1B6B3A'};border:1px solid ${u.active===false?'#f0d090':'#c8e6c9'};padding:0.25rem 0.7rem;border-radius:20px;cursor:pointer;font-size:0.78rem;font-family:inherit;font-weight:600;">${u.active===false?'🟡 Passive':'🟢 Active'}</button>
+                  </td>
+                  <td style="padding:0.85rem 1rem;white-space:nowrap;" id="cred-actions-${u.id}">
+                    <button onclick="showPermissionsModal(${u.id})" style="background:linear-gradient(135deg,#7b2ff7,#5a1fc7);color:#fff;border:none;padding:0.3rem 0.7rem;border-radius:6px;cursor:pointer;font-size:0.78rem;font-family:inherit;font-weight:600;margin-right:0.35rem;">🔑 পারমিশন${u.permissions && u.permissions.length ? ` (${u.permissions.length.toLocaleString('bn-BD')})` : ''}</button>
+                    <button onclick="askRemoveCredential(${u.id})" style="background:linear-gradient(135deg,#f36a5a,#e74c3c);color:#fff;border:none;padding:0.3rem 0.75rem;border-radius:6px;cursor:pointer;font-size:0.78rem;font-family:inherit;font-weight:600;">বাদ দিন</button>
+                  </td>
+                </tr>`).join('') : `<tr><td colspan="6" style="text-align:center;padding:3rem;color:#aaa;">এখনো কাউকে লগইন দেওয়া হয়নি</td></tr>`}
               </tbody>
             </table>
           </div>
         </div>
+        ` : ''}
 
       </div>
     `;
@@ -2061,6 +2094,64 @@
     `;
   };
 
+  // কোন Sub User কোন কাজে (গ্যালারি/কমিটি/সঞ্চয়/আবেদন/বার্তা) কাজ করতে পারবেন তা সেট করার মডাল
+  const PERMISSION_OPTIONS = [
+    { key: 'gallery', label: '🖼️ গ্যালারি ব্যবস্থাপনা' },
+    { key: 'committee', label: '🧑‍🤝‍🧑 কমিটি ব্যবস্থাপনা' },
+    { key: 'savings', label: '💰 সঞ্চয় ব্যবস্থাপনা' },
+    { key: 'applications', label: '📋 আবেদনসমূহ' },
+    { key: 'messages', label: '💬 বার্তাসমূহ' }
+  ];
+
+  window.showPermissionsModal = function(id) {
+    const users = getUsers();
+    const user = users.find(u => u.id === id);
+    if (!user) return;
+    const perms = user.permissions || [];
+    document.querySelectorAll('#permissions-modal').forEach(e => e.remove());
+    const overlay = document.createElement('div');
+    overlay.id = 'permissions-modal';
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:10000;display:flex;align-items:center;justify-content:center;padding:1rem;';
+    overlay.innerHTML = `
+      <div style="background:#fff;border-radius:16px;padding:2rem;width:100%;max-width:420px;box-shadow:0 20px 60px rgba(0,0,0,0.3);max-height:90vh;overflow-y:auto;">
+        <h2 style="font-family:Noto Serif Bengali,serif;color:#1B4F72;font-size:1.2rem;margin-bottom:0.5rem;">🔑 পারমিশন সেট করুন</h2>
+        <p style="color:#888;font-size:0.85rem;margin-bottom:1.25rem;">"${user.name}" কোন কোন সেকশনে কাজ করতে পারবেন তা বাছাই করুন। লগইন করলে তিনি শুধু এই সেকশনগুলোই দেখতে ও ব্যবস্থাপনা করতে পারবেন।</p>
+        <div style="margin-bottom:1.5rem;">
+          ${PERMISSION_OPTIONS.map(p => `
+            <label style="display:flex;align-items:center;gap:0.7rem;padding:0.7rem 0.9rem;border:1px solid #eee;border-radius:10px;margin-bottom:0.6rem;cursor:pointer;">
+              <input type="checkbox" class="perm-checkbox" value="${p.key}" ${perms.includes(p.key)?'checked':''} style="width:18px;height:18px;accent-color:#7b2ff7;">
+              <span style="font-size:0.92rem;color:#333;">${p.label}</span>
+            </label>`).join('')}
+        </div>
+        <div style="display:flex;gap:0.75rem;">
+          <button onclick="document.getElementById('permissions-modal').remove()" style="flex:1;background:#f5f5f5;color:#555;border:1px solid #ddd;padding:0.75rem;border-radius:8px;cursor:pointer;font-family:inherit;">বাতিল</button>
+          <button onclick="doSavePermissions(${id})" style="flex:2;background:linear-gradient(135deg,#7b2ff7,#5a1fc7);color:#fff;border:none;padding:0.75rem;border-radius:8px;font-size:1rem;font-family:inherit;font-weight:600;cursor:pointer;">💾 সেভ করুন</button>
+        </div>
+      </div>`;
+    overlay.addEventListener('click', e => { if(e.target===overlay) overlay.remove(); });
+    document.body.appendChild(overlay);
+  };
+
+  window.doSavePermissions = function(id) {
+    const checked = Array.from(document.querySelectorAll('.perm-checkbox:checked')).map(c => c.value);
+    const users = getUsers();
+    const user = users.find(u => u.id === id);
+    if (!user) return;
+    user.permissions = checked;
+    saveUsers(users);
+    document.getElementById('permissions-modal').remove();
+    renderAdminPanel();
+  };
+
+  window.toggleUserStatus = function(id) {
+    const users = getUsers();
+    const user = users.find(u => u.id === id);
+    if (!user) return;
+    user.active = user.active === false ? true : false;
+    saveUsers(users);
+    renderAdminPanel();
+  };
+
   window.revokeLogin = function(id) {
     const users = getUsers();
     const user = users.find(u => u.id === id);
@@ -2549,20 +2640,21 @@
     // সব এন্ট্রি (নতুন আগে)
     const sortedEntries = [...savings].sort((a, b) => (b.id||0) - (a.id||0));
     const entryRows = sortedEntries.length ? sortedEntries.map(x => `
-      <div id="sav-row-${x.id}" style="display:flex;align-items:center;gap:0.75rem;border:1px solid #eee;border-radius:10px;padding:0.65rem 0.85rem;margin-bottom:0.6rem;">
+      <div id="sav-row-${x.id}" data-saving-name="${(x.memberName||'').toLowerCase()}" style="display:flex;align-items:center;gap:0.75rem;border:1px solid #eee;border-radius:10px;padding:0.65rem 0.85rem;margin-bottom:0.6rem;">
         <div style="flex:1;min-width:0;">
           <div style="font-weight:600;color:#1B4F72;font-size:0.9rem;">${x.memberName}</div>
-          <div style="font-size:0.78rem;color:#888;">${x.month} ${x.year}${x.note ? ' • ' + x.note : ''}</div>
+          <div style="font-size:0.78rem;color:#888;">${x.month} ${x.year}${x.reference ? ` • 🔖 ${x.reference}` : ''}${x.note ? ' • ' + x.note : ''}</div>
         </div>
         <div style="font-weight:700;color:#0d8a6f;font-size:1rem;flex-shrink:0;">৳${Number(x.amount||0).toLocaleString('bn-BD')}</div>
-        <div id="sav-actions-${x.id}" style="flex-shrink:0;">
+        <div id="sav-actions-${x.id}" style="flex-shrink:0;display:flex;gap:0.35rem;">
+          <button onclick="showEditSavingModal(${x.id})" style="background:#eaf2ff;color:#2575fc;border:1px solid #c9deff;padding:0.3rem 0.55rem;border-radius:6px;cursor:pointer;font-size:0.75rem;font-family:inherit;">✏️</button>
           <button onclick="askDeleteSaving(${x.id})" style="background:#fee;color:#c00;border:1px solid #fcc;padding:0.3rem 0.6rem;border-radius:6px;cursor:pointer;font-size:0.75rem;font-family:inherit;">🗑️</button>
         </div>
-      </div>`).join('') : `<div style="text-align:center;padding:1.5rem;color:#aaa;">কোনো এন্ট্রি নেই</div>`;
+      </div>`).join('') : `<div style="text-align:center;padding:1.5rem;color:#aaa;" id="sav-no-entries">কোনো এন্ট্রি নেই</div>`;
 
     const monthOptions = BANGLA_MONTHS.map(m => `<option value="${m}" ${m===curMonth?'selected':''}>${m}</option>`).join('');
     const yearOptions = [curYear-1, curYear, curYear+1].map(y => `<option value="${y}" ${y===curYear?'selected':''}>${y}</option>`).join('');
-    const memberOptions = users.length ? users.map(u => `<option value="${u.id}">${u.name}</option>`).join('') : `<option value="">কোনো সদস্য নেই</option>`;
+    const memberOptions = users.length ? users.map(u => `<option value="${(u.name||'').replace(/"/g,'&quot;')}"></option>`).join('') : '';
 
     const m = createModal(`
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.25rem;">
@@ -2595,7 +2687,8 @@
         <div id="sav-add-err" style="display:none;background:#fee;color:#c00;padding:0.5rem 0.9rem;border-radius:8px;font-size:0.85rem;margin-bottom:0.75rem;"></div>
         <div style="margin-bottom:0.7rem;">
           <label style="display:block;font-size:0.85rem;color:#666;margin-bottom:0.3rem;font-weight:500;">সদস্য</label>
-          <select id="sav-member" style="width:100%;padding:0.55rem 0.8rem;border:1px solid #c2ede0;border-radius:8px;font-size:0.92rem;outline:none;font-family:inherit;background:#fff;">${memberOptions}</select>
+          <input id="sav-member-search" list="sav-member-list" placeholder="🔍 নাম লিখে সদস্য খুঁজুন..." autocomplete="off" style="width:100%;padding:0.55rem 0.8rem;border:1px solid #c2ede0;border-radius:8px;font-size:0.92rem;outline:none;font-family:inherit;background:#fff;box-sizing:border-box;">
+          <datalist id="sav-member-list">${memberOptions}</datalist>
         </div>
         <div style="display:flex;gap:0.6rem;margin-bottom:0.7rem;">
           <div style="flex:1;">
@@ -2610,6 +2703,10 @@
         <div style="margin-bottom:0.7rem;">
           <label style="display:block;font-size:0.85rem;color:#666;margin-bottom:0.3rem;font-weight:500;">পরিমাণ (৳)</label>
           <input id="sav-amount" type="number" min="0" placeholder="যেমনঃ ৫০০" style="width:100%;padding:0.55rem 0.8rem;border:1px solid #c2ede0;border-radius:8px;font-size:0.92rem;outline:none;font-family:inherit;">
+        </div>
+        <div style="margin-bottom:0.7rem;">
+          <label style="display:block;font-size:0.85rem;color:#666;margin-bottom:0.3rem;font-weight:500;">রেফারেন্স নং (ঐচ্ছিক)</label>
+          <input id="sav-reference" type="text" placeholder="যেমনঃ RCP-১০২৩ / রশিদ নম্বর" style="width:100%;padding:0.55rem 0.8rem;border:1px solid #c2ede0;border-radius:8px;font-size:0.92rem;outline:none;font-family:inherit;">
         </div>
         <div style="margin-bottom:0.85rem;">
           <label style="display:block;font-size:0.85rem;color:#666;margin-bottom:0.3rem;font-weight:500;">নোট (ঐচ্ছিক)</label>
@@ -2635,23 +2732,36 @@
 
       <!-- ALL ENTRIES -->
       <h3 style="font-size:0.95rem;color:#1B4F72;margin-bottom:0.75rem;font-family:Noto Serif Bengali,serif;">🧾 সব সঞ্চয়ের বিস্তারিত তালিকা</h3>
-      <div style="max-height:35vh;overflow-y:auto;">${entryRows}</div>
+      <div style="position:relative;margin-bottom:0.85rem;">
+        <span style="position:absolute;left:0.85rem;top:50%;transform:translateY(-50%);color:#999;font-size:0.9rem;">🔍</span>
+        <input id="sav-search" type="text" placeholder="নাম দিয়ে খুঁজুন..." oninput="filterSavingsEntries(this.value)" style="width:100%;padding:0.6rem 1rem 0.6rem 2.2rem;border:1px solid #c2ede0;border-radius:10px;font-size:0.9rem;outline:none;font-family:inherit;box-sizing:border-box;">
+      </div>
+      <div id="sav-search-empty" style="display:none;text-align:center;padding:1.5rem;color:#aaa;">🔍 এই নামে কোনো এন্ট্রি পাওয়া যায়নি</div>
+      <div id="sav-entries-list" style="max-height:35vh;overflow-y:auto;">${entryRows}</div>
     `);
   };
 
   window.doAddSaving = function() {
-    const memberSelect = document.getElementById('sav-member');
-    const memberId = memberSelect.value;
-    const memberName = memberSelect.options[memberSelect.selectedIndex] ? memberSelect.options[memberSelect.selectedIndex].text : '';
+    const typedName = document.getElementById('sav-member-search').value.trim();
+    const allMembers = getUsers().filter(u => u.role !== 'admin');
+    const matchedMember = allMembers.find(u => u.name === typedName);
+    const memberId = matchedMember ? matchedMember.id : '';
+    const memberName = matchedMember ? matchedMember.name : typedName;
     const month = document.getElementById('sav-month').value;
     const year = Number(document.getElementById('sav-year').value);
     const amount = Number(document.getElementById('sav-amount').value);
+    const reference = document.getElementById('sav-reference').value.trim();
     const note = document.getElementById('sav-note').value.trim();
     const err = document.getElementById('sav-add-err');
 
-    if (!memberId) {
+    if (!typedName) {
       err.style.display = 'block';
-      err.textContent = '❌ একজন সদস্য বাছাই করুন!';
+      err.textContent = '❌ একজন সদস্যের নাম লিখুন!';
+      return;
+    }
+    if (!matchedMember) {
+      err.style.display = 'block';
+      err.textContent = '❌ এই নামে কোনো সদস্য পাওয়া যায়নি! তালিকা থেকে সঠিক নাম বাছাই করুন।';
       return;
     }
     if (!amount || amount <= 0) {
@@ -2662,7 +2772,7 @@
     err.style.display = 'none';
 
     const savings = getSavings();
-    savings.push({ id: Date.now(), memberId, memberName, amount, month, year, note, date: new Date().toISOString() });
+    savings.push({ id: Date.now(), memberId, memberName, amount, month, year, reference, note, date: new Date().toISOString() });
     const ok = saveSavings(savings);
     if (ok) {
       showSavingsFull();
@@ -2687,6 +2797,101 @@
   window.deleteSaving = function(id) {
     const savings = getSavings().filter(x => x.id !== id);
     saveSavings(savings);
+    showSavingsFull();
+  };
+
+  // সঞ্চয়ের বিস্তারিত তালিকায় সদস্যের নাম দিয়ে সার্চ
+  window.filterSavingsEntries = function(query) {
+    const q = query.trim().toLowerCase();
+    const list = document.getElementById('sav-entries-list');
+    if (!list) return;
+    const rows = list.querySelectorAll('div[data-saving-name]');
+    let visibleCount = 0;
+    rows.forEach(row => {
+      const name = row.getAttribute('data-saving-name') || '';
+      const match = !q || name.includes(q);
+      row.style.display = match ? '' : 'none';
+      if (match) visibleCount++;
+    });
+    const emptyMsg = document.getElementById('sav-search-empty');
+    if (emptyMsg) emptyMsg.style.display = (q && visibleCount === 0) ? 'block' : 'none';
+  };
+
+  // একটি সঞ্চয় এন্ট্রি এডিট করার মডাল
+  window.showEditSavingModal = function(id) {
+    const savings = getSavings();
+    const entry = savings.find(x => x.id === id);
+    if (!entry) return;
+    document.querySelectorAll('#edit-saving-modal').forEach(e => e.remove());
+    const monthOpts = BANGLA_MONTHS.map(m => `<option value="${m}" ${m===entry.month?'selected':''}>${m}</option>`).join('');
+    const yr = entry.year || new Date().getFullYear();
+    const yearOpts = [yr-1, yr, yr+1].map(y => `<option value="${y}" ${y===yr?'selected':''}>${y}</option>`).join('');
+    const overlay = document.createElement('div');
+    overlay.id = 'edit-saving-modal';
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:10000;display:flex;align-items:center;justify-content:center;padding:1rem;';
+    overlay.innerHTML = `
+      <div style="background:#fff;border-radius:16px;padding:2rem;width:100%;max-width:400px;box-shadow:0 20px 60px rgba(0,0,0,0.3);max-height:90vh;overflow-y:auto;">
+        <h2 style="font-family:Noto Serif Bengali,serif;color:#0d8a6f;font-size:1.2rem;margin-bottom:1.25rem;">✏️ সঞ্চয় এডিট করুন</h2>
+        <div id="es-err" style="display:none;background:#fee;color:#c00;padding:0.6rem 1rem;border-radius:8px;font-size:0.88rem;margin-bottom:1rem;"></div>
+        <div style="margin-bottom:0.85rem;">
+          <label style="display:block;font-size:0.85rem;color:#666;margin-bottom:0.3rem;font-weight:500;">সদস্যের নাম</label>
+          <input id="es-name" type="text" value="${(entry.memberName||'').replace(/"/g,'&quot;')}" style="width:100%;padding:0.6rem 0.9rem;border:1px solid #c2ede0;border-radius:8px;font-size:0.92rem;outline:none;font-family:inherit;box-sizing:border-box;">
+        </div>
+        <div style="display:flex;gap:0.6rem;margin-bottom:0.85rem;">
+          <div style="flex:1;">
+            <label style="display:block;font-size:0.85rem;color:#666;margin-bottom:0.3rem;font-weight:500;">মাস</label>
+            <select id="es-month" style="width:100%;padding:0.6rem;border:1px solid #c2ede0;border-radius:8px;font-size:0.9rem;outline:none;font-family:inherit;background:#fff;">${monthOpts}</select>
+          </div>
+          <div style="width:100px;">
+            <label style="display:block;font-size:0.85rem;color:#666;margin-bottom:0.3rem;font-weight:500;">বছর</label>
+            <select id="es-year" style="width:100%;padding:0.6rem;border:1px solid #c2ede0;border-radius:8px;font-size:0.9rem;outline:none;font-family:inherit;background:#fff;">${yearOpts}</select>
+          </div>
+        </div>
+        <div style="margin-bottom:0.85rem;">
+          <label style="display:block;font-size:0.85rem;color:#666;margin-bottom:0.3rem;font-weight:500;">পরিমাণ (৳)</label>
+          <input id="es-amount" type="number" min="0" value="${Number(entry.amount||0)}" style="width:100%;padding:0.6rem 0.9rem;border:1px solid #c2ede0;border-radius:8px;font-size:0.92rem;outline:none;font-family:inherit;box-sizing:border-box;">
+        </div>
+        <div style="margin-bottom:0.85rem;">
+          <label style="display:block;font-size:0.85rem;color:#666;margin-bottom:0.3rem;font-weight:500;">রেফারেন্স নং</label>
+          <input id="es-reference" type="text" value="${(entry.reference||'').replace(/"/g,'&quot;')}" style="width:100%;padding:0.6rem 0.9rem;border:1px solid #c2ede0;border-radius:8px;font-size:0.92rem;outline:none;font-family:inherit;box-sizing:border-box;">
+        </div>
+        <div style="margin-bottom:1.5rem;">
+          <label style="display:block;font-size:0.85rem;color:#666;margin-bottom:0.3rem;font-weight:500;">নোট</label>
+          <input id="es-note" type="text" value="${(entry.note||'').replace(/"/g,'&quot;')}" style="width:100%;padding:0.6rem 0.9rem;border:1px solid #c2ede0;border-radius:8px;font-size:0.92rem;outline:none;font-family:inherit;box-sizing:border-box;">
+        </div>
+        <div style="display:flex;gap:0.75rem;">
+          <button onclick="document.getElementById('edit-saving-modal').remove()" style="flex:1;background:#f5f5f5;color:#555;border:1px solid #ddd;padding:0.75rem;border-radius:8px;cursor:pointer;font-family:inherit;">বাতিল</button>
+          <button onclick="doSaveSavingEdit(${id})" style="flex:2;background:linear-gradient(135deg,#1fab89,#0d8a6f);color:#fff;border:none;padding:0.75rem;border-radius:8px;font-size:1rem;font-family:inherit;font-weight:600;cursor:pointer;">💾 সেভ করুন</button>
+        </div>
+      </div>`;
+    overlay.addEventListener('click', e => { if(e.target===overlay) overlay.remove(); });
+    document.body.appendChild(overlay);
+  };
+
+  window.doSaveSavingEdit = function(id) {
+    const memberName = document.getElementById('es-name').value.trim();
+    const month = document.getElementById('es-month').value;
+    const year = Number(document.getElementById('es-year').value);
+    const amount = Number(document.getElementById('es-amount').value);
+    const reference = document.getElementById('es-reference').value.trim();
+    const note = document.getElementById('es-note').value.trim();
+    const err = document.getElementById('es-err');
+    if (!memberName) { err.style.display='block'; err.textContent='❌ সদস্যের নাম দিন!'; return; }
+    if (!amount || amount <= 0) { err.style.display='block'; err.textContent='❌ সঠিক পরিমাণ লিখুন!'; return; }
+    const savings = getSavings();
+    const entry = savings.find(x => x.id === id);
+    if (!entry) return;
+    // মিল থাকলে সদস্যের আইডি ধরে রাখা হয়, নাহলে নাম-ভিত্তিক এন্ট্রি হিসেবে থাকবে
+    const matched = getUsers().find(u => u.name === memberName);
+    entry.memberName = memberName;
+    if (matched) entry.memberId = matched.id;
+    entry.month = month;
+    entry.year = year;
+    entry.amount = amount;
+    entry.reference = reference;
+    entry.note = note;
+    saveSavings(savings);
+    document.getElementById('edit-saving-modal').remove();
     showSavingsFull();
   };
 
