@@ -1557,7 +1557,7 @@
       </tr>`).join('') : `<tr><td colspan="4" style="padding:20px;text-align:center;color:#999;">কোনো সদস্য নেই</td></tr>`;
     return `
       <div style="font-family:'Noto Serif Bengali',serif;padding:24px;background:#fff;width:700px;position:relative;">
-        <div style="position:absolute;inset:0;opacity:0.07;pointer-events:none;${watermarkStyle()}"></div>
+        <div style="position:absolute;top:0;left:0;right:0;bottom:0;width:100%;height:100%;opacity:0.08;pointer-events:none;${watermarkStyle()}"></div>
         <div style="position:relative;z-index:1;">
         <div style="text-align:center;margin-bottom:18px;">
           <div style="font-size:1.4rem;font-weight:800;color:#1B6B3A;">তারুণের আলো সামাজিক সংগঠন</div>
@@ -1609,7 +1609,7 @@
 
     return `
       <div style="font-family:'Noto Serif Bengali',serif;padding:24px;background:#fff;width:760px;position:relative;">
-        <div style="position:absolute;inset:0;opacity:0.07;pointer-events:none;${watermarkStyle()}"></div>
+        <div style="position:absolute;top:0;left:0;right:0;bottom:0;width:100%;height:100%;opacity:0.08;pointer-events:none;${watermarkStyle()}"></div>
         <div style="position:relative;z-index:1;">
         <div style="text-align:center;margin-bottom:18px;">
           <div style="font-size:1.4rem;font-weight:800;color:#1B6B3A;">তারুণের আলো সামাজিক সংগঠন</div>
@@ -1657,17 +1657,44 @@
     w.onload = () => { w.focus(); w.print(); };
   };
 
+  // ক্যানভাস থেকে A4 সাইজে ঠিকভাবে ফিট করা মাল্টি-পেজ PDF তৈরি করার হেল্পার
+  function saveCanvasAsA4PDF(canvas, filename) {
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4' });
+    const pageWidth = 210, pageHeight = 297, margin = 8;
+    const usableWidth = pageWidth - margin * 2;
+    const usableHeight = pageHeight - margin * 2;
+    const pxPerMM = canvas.width / usableWidth;
+    const pageContentHeightPx = usableHeight * pxPerMM;
+
+    let yOffsetPx = 0;
+    let firstPage = true;
+    while (yOffsetPx < canvas.height) {
+      const sliceHeightPx = Math.min(pageContentHeightPx, canvas.height - yOffsetPx);
+      const sliceCanvas = document.createElement('canvas');
+      sliceCanvas.width = canvas.width;
+      sliceCanvas.height = sliceHeightPx;
+      const ctx = sliceCanvas.getContext('2d');
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, sliceCanvas.width, sliceCanvas.height);
+      ctx.drawImage(canvas, 0, yOffsetPx, canvas.width, sliceHeightPx, 0, 0, canvas.width, sliceHeightPx);
+      const sliceData = sliceCanvas.toDataURL('image/jpeg', 0.95);
+      const sliceHeightMM = sliceHeightPx / pxPerMM;
+      if (!firstPage) pdf.addPage();
+      pdf.addImage(sliceData, 'JPEG', margin, margin, usableWidth, sliceHeightMM);
+      firstPage = false;
+      yOffsetPx += sliceHeightPx;
+    }
+    pdf.save(filename);
+  }
+
   window.downloadSavingsAsPDF = function() {
     const btn = document.getElementById('btn-sav-export-pdf');
     if (btn) { btn.disabled = true; btn.textContent = '⏳ তৈরি হচ্ছে...'; }
     loadExportLibs().then(() => {
       const holder = renderExportOffscreen(buildSavingsExportHTML());
-      html2canvas(holder.firstElementChild, { scale: 2, backgroundColor: '#ffffff' }).then(canvas => {
-        const { jsPDF } = window.jspdf;
-        const imgData = canvas.toDataURL('image/jpeg', 0.95);
-        const pdf = new jsPDF({ orientation: 'p', unit: 'px', format: [canvas.width, canvas.height] });
-        pdf.addImage(imgData, 'JPEG', 0, 0, canvas.width, canvas.height);
-        pdf.save('সঞ্চয়_প্রতিবেদন.pdf');
+      html2canvas(holder.firstElementChild, { scale: 2, backgroundColor: '#ffffff', useCORS: true }).then(canvas => {
+        saveCanvasAsA4PDF(canvas, 'সঞ্চয়_প্রতিবেদন.pdf');
         holder.remove();
         if (btn) { btn.disabled = false; btn.textContent = '📄 PDF ডাউনলোড'; }
       });
@@ -1740,12 +1767,8 @@
     if (btn) { btn.disabled = true; btn.textContent = '⏳ তৈরি হচ্ছে...'; }
     loadExportLibs().then(() => {
       const holder = renderExportOffscreen(buildMembersExportHTML());
-      html2canvas(holder.firstElementChild, { scale: 2, backgroundColor: '#ffffff' }).then(canvas => {
-        const { jsPDF } = window.jspdf;
-        const imgData = canvas.toDataURL('image/jpeg', 0.95);
-        const pdf = new jsPDF({ orientation: 'p', unit: 'px', format: [canvas.width, canvas.height] });
-        pdf.addImage(imgData, 'JPEG', 0, 0, canvas.width, canvas.height);
-        pdf.save('সদস্যদের_তালিকা.pdf');
+      html2canvas(holder.firstElementChild, { scale: 2, backgroundColor: '#ffffff', useCORS: true }).then(canvas => {
+        saveCanvasAsA4PDF(canvas, 'সদস্যদের_তালিকা.pdf');
         holder.remove();
         if (btn) { btn.disabled = false; btn.textContent = '📄 PDF ডাউনলোড'; }
       });
