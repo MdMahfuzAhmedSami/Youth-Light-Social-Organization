@@ -1534,6 +1534,18 @@
   };
 
   // সদস্যদের তালিকার পরিষ্কার (action বাটন ছাড়া) ভার্সন তৈরি — প্রিন্ট/PDF/JPG এর জন্য
+  // এক্সপোর্ট/প্রিন্টের জন্য লোগো ডাটা বের করা হয় (জল-ছাপা হিসেবে ব্যবহারের জন্য)
+  function getLogoDataUrl() {
+    const img = document.querySelector('.nav-logo-icon img');
+    return img ? img.src : '';
+  }
+
+  function watermarkStyle() {
+    const logo = getLogoDataUrl();
+    if (!logo) return '';
+    return `background-image:url('${logo}');background-repeat:no-repeat;background-position:center;background-size:280px 280px;`;
+  }
+
   function buildMembersExportHTML() {
     const members = getUsers().filter(u => u.role !== 'admin');
     const rows = members.length ? members.map((u, idx) => `
@@ -1544,7 +1556,9 @@
         <td style="padding:10px 14px;border-bottom:1px solid #eee;color:#777;">${u.joined||'-'}</td>
       </tr>`).join('') : `<tr><td colspan="4" style="padding:20px;text-align:center;color:#999;">কোনো সদস্য নেই</td></tr>`;
     return `
-      <div style="font-family:'Noto Serif Bengali',serif;padding:24px;background:#fff;width:700px;">
+      <div style="font-family:'Noto Serif Bengali',serif;padding:24px;background:#fff;width:700px;position:relative;">
+        <div style="position:absolute;inset:0;opacity:0.07;pointer-events:none;${watermarkStyle()}"></div>
+        <div style="position:relative;z-index:1;">
         <div style="text-align:center;margin-bottom:18px;">
           <div style="font-size:1.4rem;font-weight:800;color:#1B6B3A;">তারুণের আলো সামাজিক সংগঠন</div>
           <div style="font-size:1rem;color:#555;margin-top:4px;">সদস্যদের তালিকা</div>
@@ -1561,6 +1575,7 @@
           </thead>
           <tbody>${rows}</tbody>
         </table>
+        </div>
       </div>`;
   }
 
@@ -1593,7 +1608,9 @@
       </tr>`).join('') : `<tr><td colspan="6" style="padding:16px;text-align:center;color:#999;">কোনো এন্ট্রি নেই</td></tr>`;
 
     return `
-      <div style="font-family:'Noto Serif Bengali',serif;padding:24px;background:#fff;width:760px;">
+      <div style="font-family:'Noto Serif Bengali',serif;padding:24px;background:#fff;width:760px;position:relative;">
+        <div style="position:absolute;inset:0;opacity:0.07;pointer-events:none;${watermarkStyle()}"></div>
+        <div style="position:relative;z-index:1;">
         <div style="text-align:center;margin-bottom:18px;">
           <div style="font-size:1.4rem;font-weight:800;color:#1B6B3A;">তারুণের আলো সামাজিক সংগঠন</div>
           <div style="font-size:1rem;color:#555;margin-top:4px;">সঞ্চয় প্রতিবেদন</div>
@@ -1624,6 +1641,7 @@
           </thead>
           <tbody>${entryRows}</tbody>
         </table>
+        </div>
       </div>`;
   }
 
