@@ -1227,6 +1227,21 @@
     }
   }
 
+  // আয়-ব্যয় (INCOME/EXPENSE) STORAGE
+  const TXN_KEY = 'taruner_alo_transactions';
+  function getTransactions() {
+    const d = localStorage.getItem(TXN_KEY);
+    return d ? JSON.parse(d) : [];
+  }
+  function saveTransactions(t) {
+    try {
+      localStorage.setItem(TXN_KEY, JSON.stringify(t));
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
   function renderCommittee() {
     const grid = document.getElementById('committee-grid');
     if (!grid) return;
@@ -1725,6 +1740,98 @@
     });
   };
 
+  // আয়-ব্যয়ের এক্সপোর্ট (প্রিন্ট/PDF/JPG) HTML তৈরি
+  function buildTransactionsExportHTML() {
+    const txns = getTransactions();
+    const totalIncome = txns.filter(t => t.type === 'income').reduce((s, t) => s + Number(t.amount || 0), 0);
+    const totalExpense = txns.filter(t => t.type === 'expense').reduce((s, t) => s + Number(t.amount || 0), 0);
+    const netBalance = totalIncome - totalExpense;
+
+    const sorted = [...txns].sort((a, b) => (b.id||0) - (a.id||0));
+    const entryRows = sorted.length ? sorted.map((t, idx) => `
+      <tr>
+        <td style="padding:9px 14px;border-bottom:1px solid #eee;color:#555;">${(idx+1).toLocaleString('bn-BD')}</td>
+        <td style="padding:9px 14px;border-bottom:1px solid #eee;">${t.type === 'income' ? '<span style="color:#0d8a6f;font-weight:600;">আয়</span>' : '<span style="color:#c0392b;font-weight:600;">ব্যয়</span>'}</td>
+        <td style="padding:9px 14px;border-bottom:1px solid #eee;font-weight:600;color:#1B4F72;">${t.title || '-'}</td>
+        <td style="padding:9px 14px;border-bottom:1px solid #eee;color:#444;">${t.date || '-'}</td>
+        <td style="padding:9px 14px;border-bottom:1px solid #eee;color:#777;">${t.reference||'-'}</td>
+        <td style="padding:9px 14px;border-bottom:1px solid #eee;font-weight:700;${t.type==='income'?'color:#0d8a6f;':'color:#c0392b;'}">৳${Number(t.amount||0).toLocaleString('bn-BD')}</td>
+      </tr>`).join('') : `<tr><td colspan="6" style="padding:16px;text-align:center;color:#999;">কোনো এন্ট্রি নেই</td></tr>`;
+
+    return `
+      <div style="font-family:'Noto Serif Bengali',serif;padding:24px;background:#fff;width:760px;position:relative;">
+        <div style="position:absolute;top:0;left:0;right:0;bottom:0;width:100%;height:100%;opacity:0.08;pointer-events:none;${watermarkStyle()}"></div>
+        ${getLogoDataUrl() ? `<div style="position:absolute;top:18px;left:18px;width:56px;height:56px;z-index:2;"><img src="${getLogoDataUrl()}" style="width:100%;height:100%;object-fit:contain;border-radius:50%;"></div>` : ''}
+        <div style="position:relative;z-index:1;">
+        <div style="text-align:center;margin-bottom:18px;">
+          <div style="font-size:1.4rem;font-weight:800;color:#1B6B3A;">তারুণের আলো সামাজিক সংগঠন</div>
+          <div style="font-size:1rem;color:#555;margin-top:4px;">আয়-ব্যয়ের হিসাব প্রতিবেদন</div>
+          <div style="font-size:0.8rem;color:#999;margin-top:2px;">আয়: ৳${totalIncome.toLocaleString('bn-BD')} • ব্যয়: ৳${totalExpense.toLocaleString('bn-BD')} • নিট: ৳${netBalance.toLocaleString('bn-BD')}</div>
+        </div>
+        <table style="width:100%;border-collapse:collapse;font-size:0.85rem;">
+          <thead>
+            <tr style="background:#fdf1e8;">
+              <th style="padding:9px 14px;text-align:left;color:#c25a1f;">ক্র.</th>
+              <th style="padding:9px 14px;text-align:left;color:#c25a1f;">ধরন</th>
+              <th style="padding:9px 14px;text-align:left;color:#c25a1f;">বিবরণ</th>
+              <th style="padding:9px 14px;text-align:left;color:#c25a1f;">তারিখ</th>
+              <th style="padding:9px 14px;text-align:left;color:#c25a1f;">রেফারেন্স</th>
+              <th style="padding:9px 14px;text-align:left;color:#c25a1f;">পরিমাণ</th>
+            </tr>
+          </thead>
+          <tbody>${entryRows}</tbody>
+        </table>
+        </div>
+      </div>`;
+  }
+
+  window.printTransactionsReport = function() {
+    const w = window.open('', '_blank');
+    w.document.write(`
+      <html><head><title>আয়-ব্যয়ের হিসাব</title>
+      <meta charset="utf-8">
+      <style>body{margin:0;font-family:'Noto Serif Bengali',serif;} @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }</style>
+      </head><body>${buildTransactionsExportHTML()}</body></html>
+    `);
+    w.document.close();
+    w.onload = () => { w.focus(); w.print(); };
+  };
+
+  window.downloadTransactionsAsPDF = function() {
+    const btn = document.getElementById('btn-txn-export-pdf');
+    if (btn) { btn.disabled = true; btn.textContent = '⏳ তৈরি হচ্ছে...'; }
+    loadExportLibs().then(() => {
+      const holder = renderExportOffscreen(buildTransactionsExportHTML());
+      html2canvas(holder.firstElementChild, { scale: 2, backgroundColor: '#ffffff', useCORS: true }).then(canvas => {
+        saveCanvasAsA4PDF(canvas, 'আয়ব্যয়_হিসাব.pdf');
+        holder.remove();
+        if (btn) { btn.disabled = false; btn.textContent = '📄 PDF ডাউনলোড'; }
+      });
+    }).catch(() => {
+      if (btn) { btn.disabled = false; btn.textContent = '📄 PDF ডাউনলোড'; }
+      alert('❌ PDF তৈরি করা যায়নি — ইন্টারনেট সংযোগ পরীক্ষা করুন।');
+    });
+  };
+
+  window.downloadTransactionsAsJPG = function() {
+    const btn = document.getElementById('btn-txn-export-jpg');
+    if (btn) { btn.disabled = true; btn.textContent = '⏳ তৈরি হচ্ছে...'; }
+    loadExportLibs().then(() => {
+      const holder = renderExportOffscreen(buildTransactionsExportHTML());
+      html2canvas(holder.firstElementChild, { scale: 2, backgroundColor: '#ffffff' }).then(canvas => {
+        const link = document.createElement('a');
+        link.download = 'আয়ব্যয়_হিসাব.jpg';
+        link.href = canvas.toDataURL('image/jpeg', 0.95);
+        link.click();
+        holder.remove();
+        if (btn) { btn.disabled = false; btn.textContent = '🖼️ JPG ডাউনলোড'; }
+      });
+    }).catch(() => {
+      if (btn) { btn.disabled = false; btn.textContent = '🖼️ JPG ডাউনলোড'; }
+      alert('❌ ছবি তৈরি করা যায়নি — ইন্টারনেট সংযোগ পরীক্ষা করুন।');
+    });
+  };
+
   window.printMembersTable = function() {
     const w = window.open('', '_blank');
     w.document.write(`
@@ -1872,6 +1979,7 @@
           ${can('gallery') ? `<button onclick="showGalleryFull()" style="background:linear-gradient(135deg,#a569c9,#8e44ad);color:#fff;border:none;padding:0.8rem 1.6rem;border-radius:12px;cursor:pointer;font-family:inherit;font-size:0.95rem;font-weight:700;box-shadow:0 4px 14px rgba(142,68,173,0.35);">🖼️ গ্যালারি ব্যবস্থাপনা</button>` : ''}
           ${can('committee') ? `<button onclick="showCommitteeFull()" style="background:linear-gradient(135deg,#e05c4c,#c0392b);color:#fff;border:none;padding:0.8rem 1.6rem;border-radius:12px;cursor:pointer;font-family:inherit;font-size:0.95rem;font-weight:700;box-shadow:0 4px 14px rgba(192,57,43,0.35);">🧑‍🤝‍🧑 কমিটি ব্যবস্থাপনা</button>` : ''}
           ${can('savings') ? `<button onclick="showSavingsFull()" style="background:linear-gradient(135deg,#1fab89,#0d8a6f);color:#fff;border:none;padding:0.8rem 1.6rem;border-radius:12px;cursor:pointer;font-family:inherit;font-size:0.95rem;font-weight:700;box-shadow:0 4px 14px rgba(13,138,111,0.35);">💰 সঞ্চয় ব্যবস্থাপনা</button>` : ''}
+          ${can('transactions') ? `<button onclick="showTransactionsFull()" style="background:linear-gradient(135deg,#e0763c,#c25a1f);color:#fff;border:none;padding:0.8rem 1.6rem;border-radius:12px;cursor:pointer;font-family:inherit;font-size:0.95rem;font-weight:700;box-shadow:0 4px 14px rgba(194,90,31,0.35);">📒 আয়-ব্যয় হিসাব</button>` : ''}
         </div>
         ${!isFullAdmin && perms.length===0 ? `<div style="text-align:center;padding:3rem;color:#999;background:#fff;border-radius:14px;border:1px solid #eee;">এখনো আপনাকে কোনো নির্দিষ্ট কাজের অনুমতি দেওয়া হয়নি। অ্যাডমিনের সাথে যোগাযোগ করুন।</div>` : ''}
         ${can('members') ? `
@@ -2113,6 +2221,15 @@
           <input id="em-nid-input" type="file" accept="image/*" style="display:none;" onchange="previewEditMemberNid(this)">
           <button onclick="document.getElementById('em-nid-input').click()" style="width:100%;background:#fff3e0;color:#b8860b;border:1px solid #f0d090;padding:0.4rem 1rem;border-radius:8px;cursor:pointer;font-size:0.83rem;font-family:inherit;font-weight:600;">${user.nid ? '🔄 NID পরিবর্তন করুন' : '📤 NID কার্ডের ছবি আপলোড করুন'}</button>
         </div>
+        <div style="background:#f5f9ff;border:1px solid #d0e4f7;border-radius:10px;padding:0.9rem;margin-bottom:1.5rem;">
+          <div style="font-size:0.8rem;color:#1B4F72;font-weight:600;margin-bottom:0.6rem;">🔑 Username ও Password ${user.hasLogin ? '(বর্তমানে সক্রিয়)' : '(ঐচ্ছিক — দিলে লগইন অ্যাক্সেস চালু হবে)'}</div>
+          <div style="margin-bottom:0.7rem;">
+            <input id="em-username" type="text" value="${(user.username||'').replace(/"/g,'&quot;')}" placeholder="ইউজারনেম" style="width:100%;padding:0.6rem 0.9rem;border:1px solid #ddeee5;border-radius:8px;font-size:0.9rem;outline:none;font-family:inherit;box-sizing:border-box;">
+          </div>
+          <div>
+            <input id="em-password" type="text" value="${(user.password||'').replace(/"/g,'&quot;')}" placeholder="পাসওয়ার্ড" style="width:100%;padding:0.6rem 0.9rem;border:1px solid #ddeee5;border-radius:8px;font-size:0.9rem;outline:none;font-family:inherit;box-sizing:border-box;">
+          </div>
+        </div>
         <div style="display:flex;gap:0.75rem;">
           <button onclick="document.getElementById('edit-member-modal').remove()" style="flex:1;background:#f5f5f5;color:#555;border:1px solid #ddd;padding:0.75rem;border-radius:8px;cursor:pointer;font-family:inherit;">বাতিল</button>
           <button onclick="doSaveMemberEdit(${id})" style="flex:2;background:linear-gradient(135deg,#4f9ce8,#2575fc);color:#fff;border:none;padding:0.75rem;border-radius:8px;font-size:1rem;font-family:inherit;font-weight:600;cursor:pointer;">💾 সেভ করুন</button>
@@ -2146,6 +2263,8 @@
   window.doSaveMemberEdit = function(id) {
     const name = document.getElementById('em-name').value.trim();
     const phone = document.getElementById('em-phone').value.trim();
+    const username = document.getElementById('em-username').value.trim();
+    const password = document.getElementById('em-password').value.trim();
     const preview = document.getElementById('em-preview');
     const newPhoto = preview.dataset.photo;
     const nidPreview = document.getElementById('em-nid-preview');
@@ -2156,17 +2275,32 @@
       err.textContent = '❌ নাম দিন!';
       return;
     }
+    if ((username && !password) || (!username && password)) {
+      err.style.display = 'block';
+      err.textContent = '❌ লগইন দিতে চাইলে ইউজারনেম ও পাসওয়ার্ড দুটোই দিন!';
+      return;
+    }
     const users = getUsers();
     const user = users.find(u => u.id === id);
     if (!user) return;
+    if (username && users.find(u => u.username === username && u.id !== id)) {
+      err.style.display = 'block';
+      err.textContent = '❌ এই ইউজারনেম অন্য কেউ ব্যবহার করছেন!';
+      return;
+    }
     user.name = name;
     user.phone = phone;
     if (newPhoto) user.photo = newPhoto;
     if (newNid) user.nid = newNid;
+    if (username && password) {
+      user.username = username;
+      user.password = password;
+      user.hasLogin = true;
+    }
     const ok = saveUsers(users);
     document.getElementById('edit-member-modal').remove();
     renderAdminPanel();
-    if (!ok) alert('❌ NID/ছবি সেভ করা যায়নি — স্টোরেজ পূর্ণ। পুরনো কিছু ছবি মুছে আবার চেষ্টা করুন।');
+    if (!ok) alert('❌ সেভ করা যায়নি — স্টোরেজ পূর্ণ। পুরনো কিছু ছবি মুছে আবার চেষ্টা করুন।');
   };
 
   window.doAddUserFull = function() {
@@ -2499,6 +2633,7 @@
     { key: 'gallery', label: '🖼️ গ্যালারি ব্যবস্থাপনা' },
     { key: 'committee', label: '🧑‍🤝‍🧑 কমিটি ব্যবস্থাপনা' },
     { key: 'savings', label: '💰 সঞ্চয় ব্যবস্থাপনা' },
+    { key: 'transactions', label: '📒 আয়-ব্যয় হিসাব' },
     { key: 'applications', label: '📋 আবেদনসমূহ' },
     { key: 'messages', label: '💬 বার্তাসমূহ' }
   ];
@@ -3300,6 +3435,255 @@
     saveSavings(savings);
     document.getElementById('edit-saving-modal').remove();
     showSavingsFull();
+  };
+
+  // আয়-ব্যয় ব্যবস্থাপনা প্যানেল
+  window.showTransactionsFull = function() {
+    document.querySelectorAll('div[style*="position:fixed"]').forEach(e => e.remove());
+    const txns = getTransactions();
+    const now = new Date();
+
+    const totalIncome = txns.filter(t => t.type === 'income').reduce((s, t) => s + Number(t.amount || 0), 0);
+    const totalExpense = txns.filter(t => t.type === 'expense').reduce((s, t) => s + Number(t.amount || 0), 0);
+    const netBalance = totalIncome - totalExpense;
+
+    const sorted = [...txns].sort((a, b) => (b.id||0) - (a.id||0));
+    const entryRows = sorted.length ? sorted.map(t => `
+      <div id="txn-row-${t.id}" data-txn-title="${(t.title||'').toLowerCase()}" style="display:flex;align-items:center;gap:0.75rem;border:1px solid #eee;border-radius:10px;padding:0.65rem 0.85rem;margin-bottom:0.6rem;">
+        <div style="width:8px;height:38px;border-radius:4px;flex-shrink:0;background:${t.type==='income'?'#0d8a6f':'#c0392b'};"></div>
+        <div style="flex:1;min-width:0;">
+          <div style="font-weight:600;color:#1B4F72;font-size:0.9rem;">${t.title || '(শিরোনামহীন)'}</div>
+          <div style="font-size:0.78rem;color:#888;">${t.date || ''}${t.reference ? ` • 🔖 ${t.reference}` : ''}${t.note ? ' • ' + t.note : ''}</div>
+        </div>
+        <div style="font-weight:700;font-size:1rem;flex-shrink:0;${t.type==='income'?'color:#0d8a6f;':'color:#c0392b;'}">${t.type==='income'?'+':'−'}৳${Number(t.amount||0).toLocaleString('bn-BD')}</div>
+        <div id="txn-actions-${t.id}" style="flex-shrink:0;display:flex;gap:0.35rem;">
+          <button onclick="showEditTransactionModal(${t.id})" style="background:#eaf2ff;color:#2575fc;border:1px solid #c9deff;padding:0.3rem 0.55rem;border-radius:6px;cursor:pointer;font-size:0.75rem;font-family:inherit;">✏️</button>
+          <button onclick="askDeleteTransaction(${t.id})" style="background:#fee;color:#c00;border:1px solid #fcc;padding:0.3rem 0.6rem;border-radius:6px;cursor:pointer;font-size:0.75rem;font-family:inherit;">🗑️</button>
+        </div>
+      </div>`).join('') : `<div style="text-align:center;padding:1.5rem;color:#aaa;" id="txn-no-entries">কোনো এন্ট্রি নেই</div>`;
+
+    const todayStr = now.toISOString().split('T')[0];
+
+    const m = createModal(`
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.25rem;">
+        <div>
+          <h2 style="font-family:Noto Serif Bengali,serif;color:#1B4F72;font-size:1.25rem;">📒 আয়-ব্যয় হিসাব</h2>
+          <p style="color:#888;font-size:0.8rem;">সংগঠনের সব আয় ও ব্যয়ের হিসাব এক জায়গায়</p>
+        </div>
+        <button onclick="renderAdminPanel()" style="background:#f5f5f5;color:#555;border:1px solid #ddd;padding:0.4rem 0.9rem;border-radius:8px;cursor:pointer;font-size:0.85rem;">← ফিরুন</button>
+      </div>
+
+      <!-- STATS -->
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:0.75rem;margin-bottom:1.25rem;">
+        <div style="background:linear-gradient(145deg,#e6f7f2,#d0f0e6);border-radius:12px;padding:0.9rem;text-align:center;border:1px solid #b8e6d5;">
+          <div style="font-size:1.3rem;font-weight:800;color:#0d8a6f;">৳${totalIncome.toLocaleString('bn-BD')}</div>
+          <div style="font-size:0.72rem;color:#0d8a6f;margin-top:2px;">মোট আয়</div>
+        </div>
+        <div style="background:linear-gradient(145deg,#fdeaea,#fbd7d7);border-radius:12px;padding:0.9rem;text-align:center;border:1px solid #f3bcbc;">
+          <div style="font-size:1.3rem;font-weight:800;color:#c0392b;">৳${totalExpense.toLocaleString('bn-BD')}</div>
+          <div style="font-size:0.72rem;color:#c0392b;margin-top:2px;">মোট ব্যয়</div>
+        </div>
+        <div style="background:linear-gradient(145deg,${netBalance>=0?'#eaf4ff,#d3e9ff':'#fff3e0,#ffe3c2'});border-radius:12px;padding:0.9rem;text-align:center;border:1px solid ${netBalance>=0?'#b0d4f5':'#f0c896'};">
+          <div style="font-size:1.3rem;font-weight:800;color:${netBalance>=0?'#1B4F72':'#b8860b'};">৳${netBalance.toLocaleString('bn-BD')}</div>
+          <div style="font-size:0.72rem;color:${netBalance>=0?'#2c5a7a':'#8a6a1f'};margin-top:2px;">নিট ব্যালেন্স</div>
+        </div>
+      </div>
+
+      <!-- ADD NEW TRANSACTION -->
+      <div style="background:#fdf3ec;border:1px solid #f0d5bc;border-radius:10px;padding:1rem;margin-bottom:1.25rem;">
+        <h3 style="font-size:0.95rem;color:#c25a1f;margin-bottom:0.75rem;font-family:Noto Serif Bengali,serif;">➕ নতুন এন্ট্রি যোগ করুন</h3>
+        <div id="txn-add-err" style="display:none;background:#fee;color:#c00;padding:0.5rem 0.9rem;border-radius:8px;font-size:0.85rem;margin-bottom:0.75rem;"></div>
+        <div style="display:flex;gap:0.6rem;margin-bottom:0.7rem;">
+          <label style="flex:1;display:flex;align-items:center;gap:0.5rem;background:#fff;border:1px solid #f0d5bc;border-radius:8px;padding:0.55rem 0.8rem;cursor:pointer;">
+            <input type="radio" name="txn-type" value="income" checked style="accent-color:#0d8a6f;"> <span style="color:#0d8a6f;font-weight:600;font-size:0.9rem;">💚 আয়</span>
+          </label>
+          <label style="flex:1;display:flex;align-items:center;gap:0.5rem;background:#fff;border:1px solid #f0d5bc;border-radius:8px;padding:0.55rem 0.8rem;cursor:pointer;">
+            <input type="radio" name="txn-type" value="expense" style="accent-color:#c0392b;"> <span style="color:#c0392b;font-weight:600;font-size:0.9rem;">❤️ ব্যয়</span>
+          </label>
+        </div>
+        <div style="margin-bottom:0.7rem;">
+          <label style="display:block;font-size:0.85rem;color:#666;margin-bottom:0.3rem;font-weight:500;">বিবরণ / খাত</label>
+          <input id="txn-title" type="text" placeholder="যেমনঃ চাঁদা আদায়, অফিস ভাড়া" style="width:100%;padding:0.55rem 0.8rem;border:1px solid #f0d5bc;border-radius:8px;font-size:0.92rem;outline:none;font-family:inherit;box-sizing:border-box;">
+        </div>
+        <div style="display:flex;gap:0.6rem;margin-bottom:0.7rem;">
+          <div style="flex:1;">
+            <label style="display:block;font-size:0.85rem;color:#666;margin-bottom:0.3rem;font-weight:500;">পরিমাণ (৳)</label>
+            <input id="txn-amount" type="number" min="0" placeholder="যেমনঃ ৫০০" style="width:100%;padding:0.55rem 0.8rem;border:1px solid #f0d5bc;border-radius:8px;font-size:0.92rem;outline:none;font-family:inherit;box-sizing:border-box;">
+          </div>
+          <div style="flex:1;">
+            <label style="display:block;font-size:0.85rem;color:#666;margin-bottom:0.3rem;font-weight:500;">তারিখ</label>
+            <input id="txn-date" type="date" value="${todayStr}" style="width:100%;padding:0.55rem 0.8rem;border:1px solid #f0d5bc;border-radius:8px;font-size:0.9rem;outline:none;font-family:inherit;box-sizing:border-box;">
+          </div>
+        </div>
+        <div style="margin-bottom:0.7rem;">
+          <label style="display:block;font-size:0.85rem;color:#666;margin-bottom:0.3rem;font-weight:500;">রেফারেন্স নং (ঐচ্ছিক)</label>
+          <input id="txn-reference" type="text" placeholder="যেমনঃ RCP-১০২৩ / ভাউচার নম্বর" style="width:100%;padding:0.55rem 0.8rem;border:1px solid #f0d5bc;border-radius:8px;font-size:0.92rem;outline:none;font-family:inherit;box-sizing:border-box;">
+        </div>
+        <div style="margin-bottom:0.85rem;">
+          <label style="display:block;font-size:0.85rem;color:#666;margin-bottom:0.3rem;font-weight:500;">নোট (ঐচ্ছিক)</label>
+          <input id="txn-note" type="text" placeholder="অতিরিক্ত বিবরণ" style="width:100%;padding:0.55rem 0.8rem;border:1px solid #f0d5bc;border-radius:8px;font-size:0.92rem;outline:none;font-family:inherit;box-sizing:border-box;">
+        </div>
+        <button onclick="doAddTransaction()" style="width:100%;background:linear-gradient(135deg,#e0763c,#c25a1f);color:#fff;border:none;padding:0.7rem;border-radius:8px;font-size:0.95rem;font-family:inherit;font-weight:600;cursor:pointer;">যোগ করুন ✓</button>
+      </div>
+
+      <!-- EXPORT TOOLBAR -->
+      <div style="display:flex;gap:0.6rem;flex-wrap:wrap;margin-bottom:1.25rem;">
+        <button onclick="printTransactionsReport()" style="background:#f5f5f5;color:#444;border:1px solid #ddd;padding:0.45rem 0.9rem;border-radius:8px;cursor:pointer;font-size:0.82rem;font-family:inherit;font-weight:600;">🖨️ প্রিন্ট</button>
+        <button onclick="downloadTransactionsAsPDF()" id="btn-txn-export-pdf" style="background:#fdeeee;color:#c0392b;border:1px solid #f5c6c6;padding:0.45rem 0.9rem;border-radius:8px;cursor:pointer;font-size:0.82rem;font-family:inherit;font-weight:600;">📄 PDF ডাউনলোড</button>
+        <button onclick="downloadTransactionsAsJPG()" id="btn-txn-export-jpg" style="background:#eaf2ff;color:#2575fc;border:1px solid #c9deff;padding:0.45rem 0.9rem;border-radius:8px;cursor:pointer;font-size:0.82rem;font-family:inherit;font-weight:600;">🖼️ JPG ডাউনলোড</button>
+      </div>
+
+      <!-- ALL ENTRIES -->
+      <h3 style="font-size:0.95rem;color:#1B4F72;margin-bottom:0.75rem;font-family:Noto Serif Bengali,serif;">🧾 সব লেনদেনের তালিকা</h3>
+      <div style="position:relative;margin-bottom:0.85rem;">
+        <span style="position:absolute;left:0.85rem;top:50%;transform:translateY(-50%);color:#999;font-size:0.9rem;">🔍</span>
+        <input id="txn-search" type="text" placeholder="বিবরণ দিয়ে খুঁজুন..." oninput="filterTransactionEntries(this.value)" style="width:100%;padding:0.6rem 1rem 0.6rem 2.2rem;border:1px solid #f0d5bc;border-radius:10px;font-size:0.9rem;outline:none;font-family:inherit;box-sizing:border-box;">
+      </div>
+      <div id="txn-search-empty" style="display:none;text-align:center;padding:1.5rem;color:#aaa;">🔍 এই বিবরণে কোনো এন্ট্রি পাওয়া যায়নি</div>
+      <div id="txn-entries-list" style="max-height:35vh;overflow-y:auto;">${entryRows}</div>
+    `);
+  };
+
+  window.doAddTransaction = function() {
+    const typeEl = document.querySelector('input[name="txn-type"]:checked');
+    const type = typeEl ? typeEl.value : 'income';
+    const title = document.getElementById('txn-title').value.trim();
+    const amount = Number(document.getElementById('txn-amount').value);
+    const date = document.getElementById('txn-date').value;
+    const reference = document.getElementById('txn-reference').value.trim();
+    const note = document.getElementById('txn-note').value.trim();
+    const err = document.getElementById('txn-add-err');
+
+    if (!title) {
+      err.style.display = 'block';
+      err.textContent = '❌ বিবরণ/খাত লিখুন!';
+      return;
+    }
+    if (!amount || amount <= 0) {
+      err.style.display = 'block';
+      err.textContent = '❌ সঠিক পরিমাণ লিখুন!';
+      return;
+    }
+    err.style.display = 'none';
+
+    const txns = getTransactions();
+    txns.push({ id: Date.now(), type, title, amount, date, reference, note });
+    const ok = saveTransactions(txns);
+    if (ok) {
+      showTransactionsFull();
+    } else {
+      err.style.display = 'block';
+      err.textContent = '❌ সেভ করা যায়নি — স্টোরেজ পূর্ণ।';
+    }
+  };
+
+  window.filterTransactionEntries = function(query) {
+    const q = query.trim().toLowerCase();
+    const list = document.getElementById('txn-entries-list');
+    if (!list) return;
+    const rows = list.querySelectorAll('div[data-txn-title]');
+    let visibleCount = 0;
+    rows.forEach(row => {
+      const title = row.getAttribute('data-txn-title') || '';
+      const match = !q || title.includes(q);
+      row.style.display = match ? '' : 'none';
+      if (match) visibleCount++;
+    });
+    const emptyMsg = document.getElementById('txn-search-empty');
+    if (emptyMsg) emptyMsg.style.display = (q && visibleCount === 0) ? 'block' : 'none';
+  };
+
+  window.askDeleteTransaction = function(id) {
+    const actions = document.getElementById(`txn-actions-${id}`);
+    if (!actions) return;
+    actions.innerHTML = `
+      <div style="display:flex;gap:0.3rem;">
+        <button onclick="deleteTransaction(${id})" style="background:#c00;color:#fff;border:none;padding:0.3rem 0.55rem;border-radius:6px;cursor:pointer;font-size:0.72rem;font-family:inherit;">হ্যাঁ</button>
+        <button onclick="showTransactionsFull()" style="background:#f5f5f5;color:#555;border:1px solid #ddd;padding:0.3rem 0.55rem;border-radius:6px;cursor:pointer;font-size:0.72rem;font-family:inherit;">বাতিল</button>
+      </div>
+    `;
+  };
+
+  window.deleteTransaction = function(id) {
+    const txns = getTransactions().filter(t => t.id !== id);
+    saveTransactions(txns);
+    showTransactionsFull();
+  };
+
+  window.showEditTransactionModal = function(id) {
+    const txns = getTransactions();
+    const entry = txns.find(t => t.id === id);
+    if (!entry) return;
+    document.querySelectorAll('#edit-txn-modal').forEach(e => e.remove());
+    const overlay = document.createElement('div');
+    overlay.id = 'edit-txn-modal';
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:10000;display:flex;align-items:center;justify-content:center;padding:1rem;';
+    overlay.innerHTML = `
+      <div style="background:#fff;border-radius:16px;padding:2rem;width:100%;max-width:400px;box-shadow:0 20px 60px rgba(0,0,0,0.3);max-height:90vh;overflow-y:auto;">
+        <h2 style="font-family:Noto Serif Bengali,serif;color:#c25a1f;font-size:1.2rem;margin-bottom:1.25rem;">✏️ এন্ট্রি এডিট করুন</h2>
+        <div id="et-err" style="display:none;background:#fee;color:#c00;padding:0.6rem 1rem;border-radius:8px;font-size:0.88rem;margin-bottom:1rem;"></div>
+        <div style="display:flex;gap:0.6rem;margin-bottom:0.85rem;">
+          <label style="flex:1;display:flex;align-items:center;gap:0.5rem;background:#fff;border:1px solid #f0d5bc;border-radius:8px;padding:0.55rem 0.8rem;cursor:pointer;">
+            <input type="radio" name="et-type" value="income" ${entry.type==='income'?'checked':''} style="accent-color:#0d8a6f;"> <span style="color:#0d8a6f;font-weight:600;font-size:0.9rem;">💚 আয়</span>
+          </label>
+          <label style="flex:1;display:flex;align-items:center;gap:0.5rem;background:#fff;border:1px solid #f0d5bc;border-radius:8px;padding:0.55rem 0.8rem;cursor:pointer;">
+            <input type="radio" name="et-type" value="expense" ${entry.type==='expense'?'checked':''} style="accent-color:#c0392b;"> <span style="color:#c0392b;font-weight:600;font-size:0.9rem;">❤️ ব্যয়</span>
+          </label>
+        </div>
+        <div style="margin-bottom:0.85rem;">
+          <label style="display:block;font-size:0.85rem;color:#666;margin-bottom:0.3rem;font-weight:500;">বিবরণ / খাত</label>
+          <input id="et-title" type="text" value="${(entry.title||'').replace(/"/g,'&quot;')}" style="width:100%;padding:0.6rem 0.9rem;border:1px solid #f0d5bc;border-radius:8px;font-size:0.92rem;outline:none;font-family:inherit;box-sizing:border-box;">
+        </div>
+        <div style="display:flex;gap:0.6rem;margin-bottom:0.85rem;">
+          <div style="flex:1;">
+            <label style="display:block;font-size:0.85rem;color:#666;margin-bottom:0.3rem;font-weight:500;">পরিমাণ (৳)</label>
+            <input id="et-amount" type="number" min="0" value="${Number(entry.amount||0)}" style="width:100%;padding:0.6rem 0.9rem;border:1px solid #f0d5bc;border-radius:8px;font-size:0.92rem;outline:none;font-family:inherit;box-sizing:border-box;">
+          </div>
+          <div style="flex:1;">
+            <label style="display:block;font-size:0.85rem;color:#666;margin-bottom:0.3rem;font-weight:500;">তারিখ</label>
+            <input id="et-date" type="date" value="${entry.date||''}" style="width:100%;padding:0.6rem 0.9rem;border:1px solid #f0d5bc;border-radius:8px;font-size:0.9rem;outline:none;font-family:inherit;box-sizing:border-box;">
+          </div>
+        </div>
+        <div style="margin-bottom:0.85rem;">
+          <label style="display:block;font-size:0.85rem;color:#666;margin-bottom:0.3rem;font-weight:500;">রেফারেন্স নং</label>
+          <input id="et-reference" type="text" value="${(entry.reference||'').replace(/"/g,'&quot;')}" style="width:100%;padding:0.6rem 0.9rem;border:1px solid #f0d5bc;border-radius:8px;font-size:0.92rem;outline:none;font-family:inherit;box-sizing:border-box;">
+        </div>
+        <div style="margin-bottom:1.5rem;">
+          <label style="display:block;font-size:0.85rem;color:#666;margin-bottom:0.3rem;font-weight:500;">নোট</label>
+          <input id="et-note" type="text" value="${(entry.note||'').replace(/"/g,'&quot;')}" style="width:100%;padding:0.6rem 0.9rem;border:1px solid #f0d5bc;border-radius:8px;font-size:0.92rem;outline:none;font-family:inherit;box-sizing:border-box;">
+        </div>
+        <div style="display:flex;gap:0.75rem;">
+          <button onclick="document.getElementById('edit-txn-modal').remove()" style="flex:1;background:#f5f5f5;color:#555;border:1px solid #ddd;padding:0.75rem;border-radius:8px;cursor:pointer;font-family:inherit;">বাতিল</button>
+          <button onclick="doSaveTransactionEdit(${id})" style="flex:2;background:linear-gradient(135deg,#e0763c,#c25a1f);color:#fff;border:none;padding:0.75rem;border-radius:8px;font-size:1rem;font-family:inherit;font-weight:600;cursor:pointer;">💾 সেভ করুন</button>
+        </div>
+      </div>`;
+    overlay.addEventListener('click', e => { if(e.target===overlay) overlay.remove(); });
+    document.body.appendChild(overlay);
+  };
+
+  window.doSaveTransactionEdit = function(id) {
+    const typeEl = document.querySelector('input[name="et-type"]:checked');
+    const type = typeEl ? typeEl.value : 'income';
+    const title = document.getElementById('et-title').value.trim();
+    const amount = Number(document.getElementById('et-amount').value);
+    const date = document.getElementById('et-date').value;
+    const reference = document.getElementById('et-reference').value.trim();
+    const note = document.getElementById('et-note').value.trim();
+    const err = document.getElementById('et-err');
+    if (!title) { err.style.display='block'; err.textContent='❌ বিবরণ লিখুন!'; return; }
+    if (!amount || amount <= 0) { err.style.display='block'; err.textContent='❌ সঠিক পরিমাণ লিখুন!'; return; }
+    const txns = getTransactions();
+    const entry = txns.find(t => t.id === id);
+    if (!entry) return;
+    entry.type = type;
+    entry.title = title;
+    entry.amount = amount;
+    entry.date = date;
+    entry.reference = reference;
+    entry.note = note;
+    saveTransactions(txns);
+    document.getElementById('edit-txn-modal').remove();
+    showTransactionsFull();
   };
 
   window.doLogout = function() {
